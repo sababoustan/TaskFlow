@@ -1,0 +1,217 @@
+
+Table User {
+  id int [pk, increment]
+  email varchar
+  password varchar
+  first_name varchar
+  last_name varchar
+  is_active bool
+  created_at datetime
+  updated_at datetime
+}
+
+Table Workspace {
+  id int [pk, increment]
+  owner_id int
+  title varchar
+  created_at datetime
+  updated_at datetime
+  slug varchar [unique]
+}
+Ref: Workspace.owner_id > User.id
+
+Enum Role {
+Admin
+Manager
+Member
+Viewer
+}
+Table Membership {
+  id int [pk, increment]
+  user_id int 
+  workspace_id int 
+  role Role
+  joined_at datetime
+  indexes {
+    (user_id, workspace_id) [unique]
+}
+}
+Ref: Membership.user_id > User.id
+Ref: Membership.workspace_id > Workspace.id
+
+Table Project {
+  id int [pk, increment]
+  workspace_id int
+  name varchar
+  description varchar
+  start_date datetime
+  end_date datetime
+  created_at datetime
+  updated_at datetime
+  is_archived bool
+  indexes {
+        (workspace_id, name) [unique]
+    }
+}
+Ref: Project.workspace_id > Workspace.id
+
+Table Status {
+  id int [pk, increment]
+  title varchar
+  display_order int
+}
+
+Table Priority {
+  id int [pk, increment]
+  title varchar
+  level int
+}
+
+Table Task {
+  id int [pk, increment]
+  project_id int
+  title varchar
+  description varchar
+  status_id int
+  priority_id int
+  created_by int
+  assigned_to int [null]
+  position int
+  created_at datetime
+  updated_at datetime
+  due_date datetime
+  estimate_minutes int
+  sprint_id int
+}
+Ref: Task.assigned_to > User.id
+Ref: Task.project_id > Project.id
+Ref: Task.status_id > Status.id
+Ref: Task.priority_id > Priority.id
+Ref: Task.created_by > User.id
+Ref: Task.sprint_id > Sprint.id
+
+Table Sprint {
+  id int [pk, increment]
+  project_id int
+  name varchar
+  start_date datetime
+  end_date datetime
+  goal varchar
+  indexes {
+    (project_id, name) [unique]
+}
+}
+Ref: Sprint.project_id > Project.id
+
+Table Label {
+  id int [pk, increment]
+  name varchar
+  workspace_id int
+  color varchar
+  created_at datetime
+  indexes {
+    (workspace_id, name) [unique]
+  }
+}
+Ref: Label.workspace_id > Workspace.id
+
+Table TaskLabel {
+  id int [pk, increment]
+  added_by int
+  label_id int
+  task_id int
+  indexes {
+    (task_id, label_id) [unique]
+}
+}
+Ref: TaskLabel.label_id > Label.id
+Ref: TaskLabel.added_by > User.id
+Ref: TaskLabel.task_id > Task.id
+
+Table Comment {
+  id int [pk, increment]
+  task_id int
+  parent_id int
+  user_id int
+  content varchar
+  created_at datetime
+}
+Ref: Comment.user_id > User.id
+Ref: Comment.task_id > Task.id
+Ref: Comment.parent_id > Comment.id
+
+Enum NotificationType {
+TASK_ASSIGNED
+COMMENT_ADDED
+STATUS_CHANGED
+MENTION
+}
+
+Table Notification {
+  id int [pk, increment]
+  type NotificationType
+  user_id int
+  title varchar
+  message varchar
+  data json
+  read_at datetime
+  created_at datetime
+  sender_id int
+}
+Ref: Notification.user_id > User.id
+Ref: Notification.sender_id > User.id
+
+Table Activity_log {
+  id int [pk, increment]
+  task_id int
+  user_id int
+  action varchar
+  old_value varchar
+  new_value varchar
+  created_at datetime
+}
+Ref: Activity_log.user_id > User.id
+Ref: Activity_log.task_id > Task.id
+
+Table Attachment {
+  id int [pk, increment]
+  task_id int
+  file_path varchar
+  file_size BigIntegerField
+  mime_type varchar
+  uploaded_by int
+  created_at datetime
+}
+ref: Attachment.task_id > Task.id
+ref: Attachment.uploaded_by > User.id
+
+Enum InvitationStatus {
+PENDING
+ACCEPTED
+REJECTED
+EXPIRED
+}
+Table WorkspaceInvitation {
+  id int [pk, increment]
+  workspace_id int
+  email varchar
+  token varchar
+  role Role
+  status InvitationStatus
+  created_at datetime
+  expires_at datetime
+}
+Ref: WorkspaceInvitation.workspace_id > Workspace.id
+
+Table TaskStatusHistory {
+  id int [pk, increment]
+  task_id int
+  from_status_id int
+  to_status_id int
+  changed_by int
+  created_at datetime
+}
+Ref: TaskStatusHistory.task_id > Task.id
+Ref: TaskStatusHistory.changed_by > User.id  
+Ref: TaskStatusHistory.from_status_id > Status.id
+Ref: TaskStatusHistory.to_status_id > Status.id
