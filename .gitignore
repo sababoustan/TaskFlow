@@ -9,7 +9,7 @@ venv/
 
 .idea/
 
-media/
-staticfiles/
+/media/
+/staticfiles/
 
 .DS_Store
