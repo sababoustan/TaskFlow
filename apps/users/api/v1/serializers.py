@@ -105,3 +105,18 @@ class LoginSerializer(TokenObtainPairSerializer):
         }
 
         return data
+
+
+class ProfileSerializer(serializers.ModelSerializer):
+    
+    class Meta:
+        model = User
+        fields = [
+            'id',
+            'email',
+            'full_name',
+        ]
+        read_only_fields = (
+            "id",
+            "email",
+        )
