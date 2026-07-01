@@ -5,7 +5,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
 env = environ.Env()
 
-environ.Env.read_env(BASE_DIR / ".env")
+environ.Env.read_env(BASE_DIR / ".env.local")
 
 
 SECRET_KEY = env("DJANGO_SECRET_KEY")
@@ -24,12 +24,14 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
 
+    # Third-party Apps
+    "drf_spectacular",
+    
     # Project Apps
     "apps.users",
     "apps.workspaces",
     "apps.projects",
     "apps.tasks",
-
 ]
 
 
@@ -46,6 +48,24 @@ MIDDLEWARE = [
 
 ROOT_URLCONF = "config.urls"
 
+REST_FRAMEWORK = {
+    "DEFAULT_FILTER_BACKENDS": [
+        "django_filters.rest_framework.DjangoFilterBackend",
+    ],
+    "DEFAULT_AUTHENTICATION_CLASSES": (
+        "rest_framework_simplejwt.authentication.JWTAuthentication",
+    ),
+
+    "DEFAULT_SCHEMA_CLASS": (
+        "drf_spectacular.openapi.AutoSchema"
+    ),
+}
+
+SPECTACULAR_SETTINGS = {
+    "TITLE": "TaskFlow API",
+    "DESCRIPTION": "Task management system API",
+    "VERSION": "1.0.0",
+}
 
 TEMPLATES = [
     {
@@ -102,4 +122,4 @@ MEDIA_ROOT = BASE_DIR / "media"
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 
-# AUTH_USER_MODEL = "users.User"
+AUTH_USER_MODEL = "users.User"
