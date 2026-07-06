@@ -1,7 +1,10 @@
 from rest_framework.generics import (GenericAPIView, RetrieveUpdateAPIView,
                                      DestroyAPIView)
 from .serializers import (RegisterSerializer, LoginSerializer,
-                          ProfileSerializer, LogoutSerializer)
+                          ProfileSerializer, LogoutSerializer,
+                          ChangePasswordSerializer)
+from rest_framework_simplejwt.tokens import BlacklistedToken, OutstandingToken
+from django.db import transaction
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.permissions import AllowAny, IsAuthenticated
@@ -58,3 +61,29 @@ class DeleteAccountView(DestroyAPIView):
 
     def get_object(self):
         return self.request.user
+
+
+class ChangePasswordView(GenericAPIView):
+    serializer_class = ChangePasswordSerializer
+    permission_classes = [IsAuthenticated]
+
+    def blacklist_user_tokens(self, user):
+        for token in OutstandingToken.objects.filter(user=user):
+            BlacklistedToken.objects.get_or_create(token=token)
+
+    @transaction.atomic
+    def put(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        request.user.set_password(
+            serializer.validated_data["new_password"]
+        )
+        request.user.save()
+        self.blacklist_user_tokens(request.user)
+
+        return Response(
+            {
+                "message": "Password changed successfully."
+            },
+            status=status.HTTP_200_OK,
+        )
