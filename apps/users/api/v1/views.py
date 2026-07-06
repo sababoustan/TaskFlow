@@ -1,5 +1,7 @@
-from rest_framework.generics import GenericAPIView, RetrieveUpdateAPIView, DestroyAPIView
-from .serializers import RegisterSerializer, LoginSerializer, ProfileSerializer
+from rest_framework.generics import (GenericAPIView, RetrieveUpdateAPIView,
+                                     DestroyAPIView)
+from .serializers import (RegisterSerializer, LoginSerializer,
+                          ProfileSerializer, LogoutSerializer)
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.permissions import AllowAny, IsAuthenticated
@@ -28,16 +30,31 @@ class LoginView(TokenObtainPairView):
     permission_classes = [AllowAny]
 
 
+class LogoutView(GenericAPIView):
+    serializer_class = LogoutSerializer
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+
+        return Response(
+            {"message": "Logout successful."},
+            status=status.HTTP_200_OK,
+        )
+
+
 class ProfileView(RetrieveUpdateAPIView):
     serializer_class = ProfileSerializer
     permission_classes = [IsAuthenticated]
 
     def get_object(self):
         return self.request.user
-    
-    
+
+
 class DeleteAccountView(DestroyAPIView):
     permission_classes = [IsAuthenticated]
-    
+
     def get_object(self):
         return self.request.user
