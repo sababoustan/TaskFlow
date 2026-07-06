@@ -1,5 +1,7 @@
 from pathlib import Path
 import environ
+from datetime import timedelta
+
 
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
@@ -26,6 +28,9 @@ INSTALLED_APPS = [
 
     # Third-party Apps
     "drf_spectacular",
+    "rest_framework",
+    "rest_framework_simplejwt",
+    "rest_framework_simplejwt.token_blacklist",
     
     # Project Apps
     "apps.users",
@@ -65,6 +70,16 @@ SPECTACULAR_SETTINGS = {
     "TITLE": "TaskFlow API",
     "DESCRIPTION": "Task management system API",
     "VERSION": "1.0.0",
+}
+
+SIMPLE_JWT = {
+    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=15),
+    "REFRESH_TOKEN_LIFETIME": timedelta(days=7),
+
+    "ROTATE_REFRESH_TOKENS": True,
+    "BLACKLIST_AFTER_ROTATION": True,
+
+    "UPDATE_LAST_LOGIN": True,
 }
 
 TEMPLATES = [
