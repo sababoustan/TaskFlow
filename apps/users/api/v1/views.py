@@ -3,12 +3,12 @@ from rest_framework.generics import (GenericAPIView, RetrieveUpdateAPIView,
 from .serializers import (RegisterSerializer, LoginSerializer,
                           ProfileSerializer, LogoutSerializer,
                           ChangePasswordSerializer)
-from rest_framework_simplejwt.tokens import BlacklistedToken, OutstandingToken
 from django.db import transaction
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework_simplejwt.views import TokenObtainPairView
+from apps.users.services import blacklist_user_tokens
 
 
 class RegisterView(GenericAPIView):
@@ -67,10 +67,6 @@ class ChangePasswordView(GenericAPIView):
     serializer_class = ChangePasswordSerializer
     permission_classes = [IsAuthenticated]
 
-    def blacklist_user_tokens(self, user):
-        for token in OutstandingToken.objects.filter(user=user):
-            BlacklistedToken.objects.get_or_create(token=token)
-
     @transaction.atomic
     def put(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
@@ -79,7 +75,7 @@ class ChangePasswordView(GenericAPIView):
             serializer.validated_data["new_password"]
         )
         request.user.save()
-        self.blacklist_user_tokens(request.user)
+        blacklist_user_tokens(request.user)
 
         return Response(
             {

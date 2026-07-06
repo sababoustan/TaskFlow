@@ -6,8 +6,9 @@ from django.contrib.auth import authenticate
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from django.utils.translation import gettext_lazy as _
 from rest_framework.exceptions import AuthenticationFailed
-from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.exceptions import TokenError
+from apps.users.services import blacklist_refresh_token
+
 
 
 class RegisterSerializer(serializers.ModelSerializer):
@@ -133,8 +134,7 @@ class LogoutSerializer(serializers.Serializer):
 
     def save(self, **kwargs):
         try:
-            token = RefreshToken(self.token)
-            token.blacklist()
+            blacklist_refresh_token(self.token)
         except TokenError:
             raise serializers.ValidationError("Invalid or expired refresh token.")
 
