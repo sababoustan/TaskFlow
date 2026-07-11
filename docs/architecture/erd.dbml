@@ -1,11 +1,12 @@
 
 Table User {
   id int [pk, increment]
-  email varchar
+  email varchar [unique]
   password varchar
-  first_name varchar
-  last_name varchar
+  full_name varchar [note: "Optional"]
   is_active bool
+  is_staff bool
+  is_verified bool
   created_at datetime
   updated_at datetime
 }

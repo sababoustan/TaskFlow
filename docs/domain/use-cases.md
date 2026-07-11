@@ -23,20 +23,21 @@ Create a new user account.
 ### Main Flow
 
 1. User submits registration information.
-2. System validates the data.
-3. Password is encrypted.
-4. User account is created.
-5. User receives a successful response.
+2. System validates the input data.
+3. System validates password strength.
+4. Password is hashed.
+5. User account is created.
+6. User receives a successful response.
 
 ### Alternative Flow
 
 * Email already exists.
+* Password validation fails.
 * Invalid input data.
 
 ### Postconditions
-
-* User account is successfully created.
-
+* A new user account is created.
+* User can authenticate using the registered credentials.
 ---
 
 ## Login
@@ -52,23 +53,28 @@ Authenticate a user.
 ### Preconditions
 
 * User account exists.
+* User account is verified.
 * User account is active.
 
 ### Main Flow
 
 1. User enters email and password.
 2. System validates credentials.
-3. Authentication tokens are generated.
-4. User is logged in.
+3. System verifies that the account is active.
+4. System verifies that the account is verified.
+5. JWT access and refresh tokens are generated.
+6. User receives authentication tokens.
 
 ### Alternative Flow
 
 * Invalid credentials.
 * Inactive account.
+* Unverified account.
 
 ### Postconditions
 
-* User receives authentication tokens.
+* User is authenticated.
+* Access and refresh tokens are issued.
 
 ---
 
@@ -80,21 +86,151 @@ Authenticated User
 
 ### Goal
 
-End the current session.
+Terminate the current authenticated session.
 
 ### Preconditions
 
 * User is authenticated.
+* A valid refresh token is provided.
 
 ### Main Flow
 
-1. User requests logout.
-2. Authentication token is revoked.
-3. Session is terminated.
+1. User sends a logout request with the refresh token.
+2. System validates the refresh token.
+3. System blacklists the refresh token.
+4. User receives a successful response.
+
+### Alternative Flow
+* Refresh token is invalid.
+* Refresh token has expired.
 
 ### Postconditions
 
-* User is logged out.
+* The refresh token can no longer be used.
+* User must authenticate again to obtain new tokens.
+
+---
+
+## Change Password
+
+### Actor
+
+Authenticated User
+
+### Goal
+
+Change the current account password.
+
+### Preconditions
+
+- User is authenticated.
+- Current password is correct.
+
+### Main Flow
+
+1. User enters the current password.
+2. User enters a new password.
+3. User confirms the new password.
+4. System validates the current password.
+5. System validates the new password.
+6. System updates the password.
+7. System invalidates all user's refresh tokens.
+8. User receives a successful response.
+
+### Alternative Flow
+
+- Current password is incorrect.
+- Password confirmation does not match.
+- New password is the same as the current password.
+- Password does not satisfy security requirements.
+
+### Postconditions
+
+- User password is updated.
+- All refresh tokens are invalidated.
+
+---
+
+## View Profile
+
+### Actor
+
+Authenticated User
+
+### Goal
+
+View personal profile information.
+
+### Preconditions
+
+- User is authenticated.
+
+### Main Flow
+
+1. User requests profile information.
+2. System retrieves user profile.
+3. System returns profile information.
+
+### Postconditions
+
+- User profile information is displayed.
+
+---
+
+## Update Profile
+
+### Actor
+
+Authenticated User
+
+### Goal
+
+Update profile information.
+
+### Preconditions
+
+- User is authenticated.
+
+### Main Flow
+
+1. User submits updated profile information.
+2. System validates the input.
+3. System updates the profile.
+4. User receives updated profile information.
+
+### Alternative Flow
+
+- Invalid input data.
+
+### Postconditions
+
+- User profile is updated.
+
+---
+
+## Delete Account
+
+### Actor
+
+Authenticated User
+
+### Goal
+
+Permanently delete the user account.
+
+### Preconditions
+
+- User is authenticated.
+
+### Main Flow
+
+1. User requests account deletion.
+2. System deletes the user account.
+3. User receives a successful response.
+
+### Postconditions
+
+- User account is permanently removed.
 
 ---
 

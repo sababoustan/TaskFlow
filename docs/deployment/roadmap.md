@@ -57,20 +57,34 @@ Implement user authentication and authorization.
 
 ## Features
 
+* Custom User Model
 * User Registration
 * User Login
 * JWT Authentication
 * Refresh Token
 * Logout
-* Password Hashing
-* Protected APIs
+* Change Password
+* Delete Account
 * User Profile
+* Password Validation
+* Password Hashing
+* Refresh Token Blacklisting
+* Protected APIs
 
-Deliverables
+## Deliverables
 
-* Secure authentication system
+* Complete JWT-based authentication module
+* Secure user management APIs
+* Tested authentication endpoints
 
-Status: Planned
+## Security Features
+
+* JWT Authentication
+* Password Hashing
+* Password Validation
+* Refresh Token Blacklisting
+
+Status: Completed
 
 ---
 
@@ -91,7 +105,7 @@ Allow users to collaborate inside workspaces.
 * Role Management
 * Permission Validation
 
-Deliverables
+## Deliverables
 
 * Multi-workspace support
 
@@ -114,7 +128,7 @@ Invite users into workspaces.
 * Reject Invitation
 * Expiration Validation
 
-Deliverables
+## Deliverables
 
 * Complete invitation workflow
 
@@ -136,7 +150,7 @@ Manage projects inside workspaces.
 * Delete Project
 * Project Validation
 
-Deliverables
+## Deliverables
 
 * Project management module
 
@@ -159,7 +173,7 @@ Support Agile sprint planning.
 * Sprint Timeline
 * Assign Tasks to Sprint
 
-Deliverables
+## Deliverables
 
 * Sprint management module
 
@@ -187,7 +201,7 @@ Implement the core task management system.
 * Task Position
 * Task Validation
 
-Deliverables
+## Deliverables
 
 * Complete task management system
 
@@ -210,7 +224,7 @@ Organize tasks using labels.
 * Remove Label
 * Label Colors
 
-Deliverables
+## Deliverables
 
 * Label management
 
@@ -231,7 +245,7 @@ Support discussions on tasks.
 * Edit Comment
 * Delete Comment
 
-Deliverables
+## Deliverables
 
 * Threaded comments
 
@@ -253,7 +267,7 @@ Upload and manage task attachments.
 * Validate File Type
 * Validate File Size
 
-Deliverables
+## Deliverables
 
 * File attachment system
 
@@ -275,7 +289,7 @@ Notify users about important events.
 * Mention User
 * Mark as Read
 
-Deliverables
+## Deliverables
 
 * Notification system
 
@@ -296,7 +310,7 @@ Track all important actions.
 * Assignment History
 * Priority History
 
-Deliverables
+## Deliverables
 
 * Audit log
 
@@ -312,13 +326,13 @@ Move time-consuming operations into asynchronous workers.
 
 ## Features
 
-* Celery
 * Redis
+* Celery
 * Email Sending
 * Reminder Tasks
 * Cleanup Jobs
 
-Deliverables
+## Deliverables
 
 * Background processing
 
@@ -340,7 +354,7 @@ Ensure application quality.
 * Permission Tests
 * Service Tests
 
-Deliverables
+## Deliverables
 
 * High test coverage
 
@@ -360,7 +374,7 @@ Generate API documentation.
 * OpenAPI Specification
 * Endpoint Documentation
 
-Deliverables
+## Deliverables
 
 * API documentation
 
@@ -382,7 +396,7 @@ Automate code quality checks.
 * Automated Tests
 * Docker Image Build
 
-Deliverables
+## Deliverables
 
 * CI Pipeline
 
@@ -405,7 +419,7 @@ Prepare the application for production deployment.
 * Environment Variables
 * Production Settings
 
-Deliverables
+## Deliverables
 
 * Production-ready infrastructure
 
@@ -427,6 +441,7 @@ The following features are outside the initial MVP and may be implemented in fut
 * User Presence
 * File Preview
 * Email Templates
+* Rate Limiting
 
 ---
 
@@ -460,7 +475,7 @@ The following features are outside the initial MVP and may be implemented in fut
 | Phase    | Status    |
 | -------- | --------- |
 | Phase 1  | Completed |
-| Phase 2  | Planned   |
+| Phase 2  | Completed |
 | Phase 3  | Planned   |
 | Phase 4  | Planned   |
 | Phase 5  | Planned   |
@@ -493,3 +508,6 @@ The objective of TaskFlow is not only to build a functional task management syst
 * Continuous Integration
 * Production-ready Infrastructure
 * Scalable and Maintainable Codebase
+* Secure Authentication
+* Security Best Practices
+* Scalable API Design

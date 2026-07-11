@@ -15,6 +15,7 @@ This document describes the REST API design for the TaskFlow backend.
 # Authentication
 
 Authentication is based on JWT (JSON Web Token).
+Access tokens are short-lived, while refresh tokens are used to obtain new access tokens.
 
 Every protected endpoint requires the following header:
 
@@ -50,7 +51,7 @@ Authorization: Bearer <access_token>
 
 ---
 
-# Authentication
+# Authentication Endpoints
 
 ## Register
 
@@ -75,10 +76,10 @@ Returns JWT access and refresh tokens.
 ## Refresh Token
 
 ```
-POST /auth/refresh/
+POST /auth/token/refresh/
 ```
 
-Returns a new access token.
+Returns a new access token using a valid refresh token.
 
 ---
 
@@ -88,7 +89,55 @@ Returns a new access token.
 POST /auth/logout/
 ```
 
-Invalidates the refresh token.
+Deletes the authenticated user's account and invalidates all active refresh tokens.
+
+---
+
+## Profile
+
+```
+GET /auth/profile/
+
+```
+
+Returns the authenticated user's profile.
+
+---
+
+## Update Profile
+
+```
+PUT /auth/profile/
+```
+
+Updates the authenticated user's profile.
+
+---
+
+```
+PATCH /auth/profile/
+```
+
+Partially updates the authenticated user's profile.
+
+---
+
+## Delete Account
+
+```
+DELETE /auth/account/
+```
+
+Deletes the authenticated user's account and invalidates all active refresh tokens.
+---
+
+## Change Password
+
+```
+PATCH /auth/change-password/
+```
+
+Changes the authenticated user's password.
 
 ---
 
@@ -570,7 +619,6 @@ Returns all activities related to the selected task.
 | 403  | Forbidden             |
 | 404  | Not Found             |
 | 409  | Conflict              |
-| 422  | Validation Error      |
 | 500  | Internal Server Error |
 
 ---
@@ -616,6 +664,8 @@ assigned_to=
 
 project=
 
+workspace=
+
 sprint=
 
 label=
@@ -654,7 +704,7 @@ GET /tasks?ordering=-created_at
 Example:
 
 ```
-GET /tasks?search=authentication
+GET /tasks?search=login
 ```
 
 ---
@@ -676,3 +726,8 @@ application/json
 
 multipart/form-data
 ```
+
+# API Documentation
+
+Interactive API documentation is available through Swagger UI and OpenAPI Specification.
+

@@ -73,7 +73,9 @@ Runs the Django application using Gunicorn.
 Responsibilities:
 
 - REST API
-- Authentication
+- JWT Authentication
+- User Management
+- Password Management
 - Business Logic
 - Database Access
 
@@ -105,7 +107,8 @@ Acts as both the cache layer and the Celery message broker.
 Responsibilities:
 
 - Caching
-- Message Queue
+- Celery Message Broker
+- Celery Result Backend
 - Rate Limiting (Future)
 
 ---
@@ -159,6 +162,10 @@ SECRET_KEY=
 
 DEBUG=
 
+ACCESS_TOKEN_LIFETIME=
+
+REFRESH_TOKEN_LIFETIME=
+
 ALLOWED_HOSTS=
 
 POSTGRES_DB=
@@ -183,7 +190,6 @@ EMAIL_HOST_USER=
 
 EMAIL_HOST_PASSWORD=
 
-JWT_SECRET_KEY=
 ```
 
 ---
@@ -285,6 +291,8 @@ Production deployment should include:
 
 - HTTPS
 - SSL Certificates
+- JWT Authentication
+- Refresh Token Blacklisting
 - Secure Cookies
 - HttpOnly Cookies
 - CSRF Protection
@@ -299,9 +307,11 @@ Production deployment should include:
 
 Application logs include:
 
+- Authentication Events
+- Login Attempts
+- Password Changes
 - API Requests
 - Exceptions
-- Authentication Events
 - Celery Tasks
 - Database Errors
 
@@ -326,6 +336,8 @@ Metrics:
 - Response Time
 - Error Rate
 - Queue Size
+- Authentication Failures
+- API Throughput
 
 ---
 
@@ -396,6 +408,8 @@ Pipeline Passed
 Before deployment:
 
 - Environment Variables Configured
+- JWT Configuration Verified
+- Authentication Endpoints Tested
 - DEBUG=False
 - Database Migrated
 - Static Files Collected
@@ -420,6 +434,10 @@ Before deployment:
 - Monitoring Dashboard
 - Distributed Caching
 - GitHub Container Registry
+- Email Verification
+- Password Reset via Email
+- Login Rate Limiting
+- Distributed Session Management
 
 ---
 
@@ -450,6 +468,7 @@ The primary goals are:
 
 - Scalability
 - Security
+- Reliability
 - Maintainability
 - High Availability
 - Containerized Infrastructure

@@ -36,9 +36,6 @@ The architecture is designed around the following software engineering principle
 Presentation Layer
         │
         ▼
-Application Layer
-        │
-        ▼
 Service Layer
         │
         ▼
@@ -64,6 +61,8 @@ Responsibilities:
 * Authenticate users
 * Return HTTP responses
 * Delegate requests to the Application Layer
+* Authorize authenticated users
+* Serialize and deserialize request/response data
 
 ---
 
@@ -84,6 +83,7 @@ Responsibilities:
 
 * Implement business logic
 * Enforce business rules
+* Manage authentication-related operations
 * Coordinate repositories
 * Manage database transactions
 * Validate domain constraints
@@ -116,6 +116,8 @@ Responsibilities:
 * Email services
 * File storage
 * External service integrations
+* JWT Authentication
+* Token Blacklisting
 
 ---
 
@@ -128,6 +130,7 @@ The project follows several design patterns:
 * Dependency Injection
 * Factory Pattern
 * Strategy Pattern
+* Serializer Pattern (Django REST Framework)
 
 ---
 
@@ -173,16 +176,13 @@ HTTP Request
 Presentation Layer
         │
         ▼
-Application Layer
-        │
-        ▼
 Service Layer
         │
         ▼
 Domain Layer
         │
         ▼
-Repository
+Infrastructure Layer
         │
         ▼
 Database
@@ -215,6 +215,7 @@ The architecture is designed to support future scalability through:
 * Caching with Redis
 * Containerized deployment
 * Stateless REST API
+* JWT-based Stateless Authentication
 
 ---
 
@@ -240,6 +241,7 @@ The architecture is designed to simplify testing by:
 * Supporting dependency injection
 * Keeping domain logic independent from the framework
 * Making unit and integration testing straightforward
+* API endpoint testing with pytest
 
 ---
 
@@ -254,6 +256,8 @@ Potential architectural enhancements include:
 * Object Storage (AWS S3 / MinIO)
 * Kubernetes Deployment
 * Microservices Migration (if required)
+* Email Verification Workflow
+* Password Reset Workflow
 
 ---
 

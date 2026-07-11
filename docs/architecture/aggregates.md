@@ -5,6 +5,28 @@ This document defines the aggregate boundaries of the TaskFlow domain model base
 An aggregate is a consistency boundary that groups related entities and enforces business rules through a single Aggregate Root.
 
 ---
+# User Aggregate
+
+## Aggregate Root
+
+- User
+
+## References
+
+- —
+
+## Responsibilities
+
+- Register new users.
+- Authenticate users.
+- Manage user profiles.
+- Change passwords.
+- Delete user accounts.
+- Manage account verification status.
+- Manage authentication tokens.
+- Blacklist refresh tokens during logout and password changes.
+
+---
 
 # Workspace Aggregate
 
@@ -165,6 +187,8 @@ Aggregates communicate through identifiers (IDs) instead of direct object refere
 
 Examples:
 
+- A Workspace references its owner by `owner_id`.
+- A Task references its assignee by `assigned_to`.
 - A Task references a Project by `project_id`.
 - A Task references a Sprint by `sprint_id`.
 - A Membership references a Workspace by `workspace_id`.
@@ -186,11 +210,12 @@ This approach keeps aggregates loosely coupled and improves scalability.
 
 # Aggregate Summary
 
-| Aggregate | Aggregate Root | Main Entities |
-|-----------|----------------|---------------|
-| Workspace | Workspace | Membership, WorkspaceInvitation |
-| Project | Project | Sprint |
-| Task | Task | Comment, Attachment |
-| Notification | Notification | — |
-| Comment | Comment | — |
-| Attachment | Attachment | — |
+| Aggregate    | Aggregate Root | Main Entities                   |
+| ------------ | -------------- | ------------------------------- |
+| **User**     | **User**       | —                               |
+| Workspace    | Workspace      | Membership, WorkspaceInvitation |
+| Project      | Project        | Sprint                          |
+| Task         | Task           | Comment, Attachment             |
+| Notification | Notification   | —                               |
+| Comment      | Comment        | —                               |
+| Attachment   | Attachment     | —                               |

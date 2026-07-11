@@ -1,5 +1,15 @@
 # Business Rules
 
+## Authentication
+
+* Email addresses must be unique.
+* Passwords must satisfy the configured password policy.
+* Only active users can authenticate.
+* Only verified users can authenticate.
+* Refresh tokens are invalidated on logout.
+* All active refresh tokens are invalidated after a successful password change.
+* Users cannot reuse their current password when changing it.
+
 ## Workspace
 
 * Each workspace must have exactly one owner.
