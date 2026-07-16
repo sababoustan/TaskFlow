@@ -12,3 +12,15 @@ class WorkspaceSerializer(serializers.ModelSerializer):
             'title',
             'created_at',
         ]
+
+
+class InvitationsSerializer(serializers.ModelSerializer):
+    email = serializers.EmailField(max_length=250)
+    role = serializers.ChoiceField(Role.choices)
+
+    class Meta:
+        model = WorkspaceInvitation
+        fields = [
+            'email',
+            'role',
+        ]
