@@ -7,6 +7,7 @@ from rest_framework.test import APIClient
 def client():
     return APIClient()
 
+
 @pytest.fixture
 def user(db):
     return User.objects.create_user(
@@ -15,5 +16,3 @@ def user(db):
         password="StrongPassword123",
         is_verified=True,
     )
-    
-    
