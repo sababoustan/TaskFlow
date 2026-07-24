@@ -14,7 +14,7 @@ class WorkspaceSerializer(serializers.ModelSerializer):
         ]
 
 
-class InvitationsSerializer(serializers.ModelSerializer):
+class InvitationCreateSerializer(serializers.ModelSerializer):
     email = serializers.EmailField(max_length=250)
     role = serializers.ChoiceField(Role.choices)
 
@@ -23,4 +23,20 @@ class InvitationsSerializer(serializers.ModelSerializer):
         fields = [
             'email',
             'role',
+        ]
+
+      
+class InvitationSerializer(serializers.ModelSerializer):
+    email = serializers.EmailField(source="user.email", read_only=True)
+    invited_by = serializers.EmailField(source="invited_by.email",
+                                        read_only=True)
+    class Meta:
+        model = WorkspaceInvitation
+        fields = [
+            'id',
+            'email',
+            'invited_by',
+            'role',
+            'status',
+            'created_at',
         ]

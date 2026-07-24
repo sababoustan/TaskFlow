@@ -6,12 +6,10 @@ from .permissions import has_workspace_role
 from django.shortcuts import get_object_or_404
 
 
-
 def invite_user_to_workspace(*, invited_by, workspace_id, validated_data):
     email = validated_data["email"]
     role = validated_data["role"]
     workspace = Workspace.objects.filter(id=workspace_id).first()
-    print(workspace)
     workspace = get_object_or_404(
         Workspace,
         id=workspace_id,
@@ -21,7 +19,6 @@ def invite_user_to_workspace(*, invited_by, workspace_id, validated_data):
         user=invited_by,
         allowed_roles=[Role.ADMIN],
     )
-    print(email)
     user = get_object_or_404(
         User,
         email=email,
@@ -52,3 +49,54 @@ def invite_user_to_workspace(*, invited_by, workspace_id, validated_data):
         user=user,
         role=role,
     )
+
+
+def accept_invitation(*, invitation):
+    if invitation.status != InvitationStatus.PENDING:
+        raise ValidationError(
+            {
+                "message": "This invitation has already been processed."
+            }
+        )
+    if Membership.objects.filter(
+        workspace=invitation.workspace,
+        user=invitation.user,
+    ).exists():
+        raise ValidationError(
+            {
+                "message": "User is already a member of this workspace."
+            }
+        )
+    membership = Membership.objects.create(
+        user=invitation.user,
+        workspace=invitation.workspace,
+        role=invitation.role,
+    )
+
+    invitation.status = InvitationStatus.ACCEPTED
+    invitation.save(update_fields=["status"])
+    return membership
+
+
+def reject_invitation(*, invitation):
+    if invitation.status != InvitationStatus.PENDING:
+        raise ValidationError(
+            {
+                "message": "This invitation has already been processed."
+            }
+        )
+    invitation.status = InvitationStatus.REJECTED
+    invitation.save(update_fields=["status"])
+    return invitation
+
+
+def cancel_invitation(*, invitation):
+    if invitation.status != InvitationStatus.PENDING:
+        raise ValidationError(
+            {
+                "message": "This invitation has already been processed."
+            }
+        )
+    invitation.status = InvitationStatus.CANCELLED
+    invitation.save(update_fields=["status"])
+    return invitation

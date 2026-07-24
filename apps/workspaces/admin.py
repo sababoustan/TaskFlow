@@ -25,7 +25,7 @@ class  MembershipeAdmin(admin.ModelAdmin):
 
 @admin.register(WorkspaceInvitation)
 class InvitationAdmin(admin.ModelAdmin):
-    list_display = ('invited_by', 'workspace', 'user', 'role', 'status',
+    list_display = ('id', 'invited_by', 'workspace', 'user', 'role', 'status',
                     'created_at')
     list_filter = ('status', 'created_at', 'role')
     search_fields = (

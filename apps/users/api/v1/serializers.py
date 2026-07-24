@@ -10,7 +10,6 @@ from rest_framework_simplejwt.exceptions import TokenError
 from apps.users.services import blacklist_refresh_token
 
 
-
 class RegisterSerializer(serializers.ModelSerializer):
     password = serializers.CharField(
         write_only=True,
