@@ -12,9 +12,17 @@
 
 ## Workspace
 
-* Each workspace must have exactly one owner.
-* Only the workspace owner can delete the workspace.
-* A workspace owner cannot leave the workspace unless ownership is transferred.
+- Each workspace must have exactly one owner.
+- Only the workspace owner can delete the workspace.
+- A workspace owner cannot leave the workspace unless ownership is transferred.
+- Only the workspace owner or an admin can invite users.
+- Only the workspace owner or an admin can view workspace invitations.
+- A user cannot have more than one membership in the same workspace.
+- A user cannot have more than one pending invitation for the same workspace.
+- Accepting an invitation automatically creates a membership.
+- Only the invited user can accept or reject an invitation.
+- Only the workspace owner or an admin can cancel a pending invitation.
+- Invitations can only be accepted, rejected, or cancelled while their status is `PENDING`.
 
 ## Membership
 

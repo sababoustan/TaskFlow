@@ -143,30 +143,30 @@ Changes the authenticated user's password.
 
 # Workspace
 
-## Get Workspaces
+## List Workspaces
 
-```
-GET /workspaces/
+```http
+GET /api/v1/workspaces/
 ```
 
-Returns all workspaces accessible by the current user.
+Returns all workspaces owned by or shared with the authenticated user.
 
 ---
 
 ## Create Workspace
 
-```
-POST /workspaces/
+```http
+POST /api/v1/workspaces/
 ```
 
 Creates a new workspace.
 
 ---
 
-## Get Workspace
+## Retrieve Workspace
 
-```
-GET /workspaces/{workspace_id}/
+```http
+GET /api/v1/workspaces/{workspace_id}/
 ```
 
 Returns workspace details.
@@ -175,8 +175,8 @@ Returns workspace details.
 
 ## Update Workspace
 
-```
-PUT /workspaces/{workspace_id}/
+```http
+PATCH /api/v1/workspaces/{workspace_id}/
 ```
 
 Updates workspace information.
@@ -185,77 +185,80 @@ Updates workspace information.
 
 ## Delete Workspace
 
-```
-DELETE /workspaces/{workspace_id}/
+```http
+DELETE /api/v1/workspaces/{workspace_id}/
 ```
 
 Deletes a workspace.
 
 ---
 
-# Workspace Members
+# Workspace Invitations
 
-## List Members
+## List Invitations
 
+```http
+GET /api/v1/workspaces/{workspace_id}/invitations/
 ```
-GET /workspaces/{workspace_id}/members/
-```
 
-Returns all workspace members.
+Returns all invitations for the specified workspace.
+
+Only workspace owners and admins can access this endpoint.
 
 ---
 
-## Invite Member
+## Create Invitation
 
-```
-POST /workspaces/{workspace_id}/members/invite/
+```http
+POST /api/v1/workspaces/{workspace_id}/invitations/
 ```
 
-Creates a workspace invitation.
+Invites an existing user to the workspace and assigns a role.
+
+Validation includes:
+
+- User must exist.
+- User must not already be a workspace member.
+- User must not already have a pending invitation.
+- Only workspace owner or admins can invite users.
 
 ---
-
-## Remove Member
-
-```
-DELETE /workspaces/{workspace_id}/members/{user_id}/
-```
-
-Removes a member from the workspace.
-
----
-
-## Change Member Role
-
-```
-PATCH /workspaces/{workspace_id}/members/{user_id}/role/
-```
-
-Updates the member role.
-
----
-
-# Workspace Invitation
 
 ## Accept Invitation
 
-```
-POST /workspace-invitations/accept/
+```http
+POST /api/v1/workspaces/invitations/{invitation_id}/accept/
 ```
 
-Accepts an invitation using its token.
+Accepts a pending invitation.
+
+A Membership record is created automatically using the role assigned in the invitation.
 
 ---
 
 ## Reject Invitation
 
-```
-POST /workspace-invitations/reject/
+```http
+POST /api/v1/workspaces/invitations/{invitation_id}/reject/
 ```
 
-Rejects an invitation.
+Rejects a pending invitation.
+
+The invitation status becomes `REJECTED`.
 
 ---
+
+## Cancel Invitation
+
+```http
+POST /api/v1/workspaces/invitations/{invitation_id}/cancel/
+```
+
+Cancels a pending invitation.
+
+Only workspace owners and admins can perform this action.
+
+The invitation status becomes `CANCELLED`.
 
 # Project
 

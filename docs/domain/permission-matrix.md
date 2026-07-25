@@ -8,23 +8,35 @@ This document defines the authorization rules for each role in the TaskFlow syst
 
 The system supports the following roles:
 
-| Role    | Description                                                                 |
-| ------- | --------------------------------------------------------------------------- |
-| Admin   | Full access to all workspace resources.                                     |
-| Manager | Can manage projects, sprints, tasks and members except workspace ownership. |
-| Member  | Can work on assigned tasks and collaborate within the workspace.            |
-| Viewer  | Read-only access.                                                           |
+| Role | Description |
+|------|-------------|
+| Admin | Can manage workspace members and invitations. |
+| Manager | Reserved for future project management features. |
+| Member | Can participate in workspaces after accepting an invitation. |
+| Viewer | Read-only role reserved for future features. |
 
 ---
 
 # Workspace
 
-| Permission         | Admin | Manager | Member | Viewer |
-| ------------------ | :---: | :-----: | :----: | :----: |
-| View Workspace     |   ✅   |    ✅    |    ✅   |    ✅   |
-| Update Workspace   |   ✅   |    ❌    |    ❌   |    ❌   |
-| Delete Workspace   |   ✅   |    ❌    |    ❌   |    ❌   |
-| Transfer Ownership |   ✅   |    ❌    |    ❌   |    ❌   |
+| Permission | Owner | Admin | Manager | Member | Viewer |
+|-----------|:-----:|:-----:|:-------:|:------:|:------:|
+| View Workspace | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Create Workspace | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Update Workspace | ✅ | ✅ | ❌ | ❌ | ❌ |
+| Delete Workspace | ✅ | ❌ | ❌ | ❌ | ❌ |
+| List Invitations | ✅ | ✅ | ❌ | ❌ | ❌ |
+| Invite Users | ✅ | ✅ | ❌ | ❌ | ❌ |
+| Cancel Invitation | ✅ | ✅ | ❌ | ❌ | ❌ |
+
+---
+
+# Workspace Invitations
+
+| Permission | Owner | Admin | Manager | Member | Viewer |
+|-----------|:-----:|:-----:|:-------:|:------:|:------:|
+| Accept Own Invitation | ❌ | ❌ | ✅ | ✅ | ✅ |
+| Reject Own Invitation | ❌ | ❌ | ✅ | ✅ | ✅ |
 
 ---
 

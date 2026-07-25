@@ -248,72 +248,261 @@ Create a new workspace.
 
 ### Preconditions
 
-* User is authenticated.
+- User is authenticated.
 
 ### Main Flow
 
-1. User enters workspace information.
+1. User enters the workspace title.
 2. System validates the request.
 3. Workspace is created.
-4. User becomes the workspace owner.
+4. The authenticated user becomes the workspace owner.
 
 ### Alternative Flow
 
-* Workspace title already exists.
+- Invalid workspace data.
 
 ### Postconditions
 
-* Workspace is successfully created.
+- Workspace is successfully created.
+
+---
+
+## View Workspaces
+
+### Actor
+
+Authenticated User
+
+### Goal
+
+View all workspaces accessible by the user.
+
+### Preconditions
+
+- User is authenticated.
+
+### Main Flow
+
+1. User requests the workspace list.
+2. System returns workspaces owned by the user.
+3. System also returns workspaces where the user is a member.
+
+### Postconditions
+
+- Accessible workspaces are displayed.
 
 ---
 
 ## Update Workspace
 
-## Delete Workspace
-
-## View Workspace
-
----
-
-# Workspace Members
-
-## Invite Member
-
 ### Actor
 
-Workspace Admin
+Workspace Owner
 
 ### Goal
 
-Invite a new member to the workspace.
+Update workspace information.
 
 ### Preconditions
 
-* User has administrator permission.
+- User is the workspace owner.
 
 ### Main Flow
 
-1. Admin enters member email.
-2. Invitation token is generated.
-3. Invitation is stored.
-4. Invitation is sent.
+1. User updates the workspace information.
+2. System validates the request.
+3. Workspace is updated.
 
 ### Alternative Flow
 
-* User is already a member.
-* Invitation already exists.
+- User is not the workspace owner.
 
 ### Postconditions
 
-* Invitation is waiting for acceptance.
+- Workspace information is updated.
+
+---
+
+## Delete Workspace
+
+### Actor
+
+Workspace Owner
+
+### Goal
+
+Delete a workspace.
+
+### Preconditions
+
+- User is the workspace owner.
+
+### Main Flow
+
+1. User requests workspace deletion.
+2. System validates ownership.
+3. Workspace is deleted.
+
+### Alternative Flow
+
+- User is not the workspace owner.
+
+### Postconditions
+
+- Workspace is removed.
+
+---
+
+# Workspace Invitations
+
+## Invite User
+
+### Actor
+
+Workspace Owner / Admin
+
+### Goal
+
+Invite an existing user to a workspace.
+
+### Preconditions
+
+- User has Owner or Admin permission.
+- Invited user exists.
+- Invited user is not already a workspace member.
+- Invited user does not already have a pending invitation.
+
+### Main Flow
+
+1. User enters the invitee's email and role.
+2. System validates permissions.
+3. System creates a pending invitation.
+
+### Alternative Flow
+
+- User is already a workspace member.
+- User already has a pending invitation.
+
+### Postconditions
+
+- Invitation is stored with **PENDING** status.
+
+---
+
+## List Invitations
+
+### Actor
+
+Workspace Owner / Admin
+
+### Goal
+
+View all invitations for a workspace.
+
+### Preconditions
+
+- User has Owner or Admin permission.
+
+### Main Flow
+
+1. User requests the invitation list.
+2. System returns all workspace invitations.
+
+### Postconditions
+
+- Invitations are displayed.
 
 ---
 
 ## Accept Invitation
 
+### Actor
+
+Invited User
+
+### Goal
+
+Accept a workspace invitation.
+
+### Preconditions
+
+- Invitation belongs to the authenticated user.
+- Invitation status is **PENDING**.
+
+### Main Flow
+
+1. User accepts the invitation.
+2. System creates a workspace membership.
+3. Invitation status changes to **ACCEPTED**.
+
+### Alternative Flow
+
+- Invitation has already been processed.
+- User is already a workspace member.
+
+### Postconditions
+
+- Membership is created.
+
 ---
 
 ## Reject Invitation
+
+### Actor
+
+Invited User
+
+### Goal
+
+Reject a workspace invitation.
+
+### Preconditions
+
+- Invitation belongs to the authenticated user.
+- Invitation status is **PENDING**.
+
+### Main Flow
+
+1. User rejects the invitation.
+2. Invitation status changes to **REJECTED**.
+
+### Alternative Flow
+
+- Invitation has already been processed.
+
+### Postconditions
+
+- Invitation is rejected.
+
+---
+
+## Cancel Invitation
+
+### Actor
+
+Workspace Owner / Admin
+
+### Goal
+
+Cancel a pending workspace invitation.
+
+### Preconditions
+
+- User has Owner or Admin permission.
+- Invitation status is **PENDING**.
+
+### Main Flow
+
+1. User cancels the invitation.
+2. Invitation status changes to **CANCELLED**.
+
+### Alternative Flow
+
+- Invitation has already been processed.
+
+### Postconditions
+
+- Invitation is cancelled.
 
 ---
 

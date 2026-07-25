@@ -45,15 +45,16 @@ An aggregate is a consistency boundary that groups related entities and enforces
 
 ## Responsibilities
 
-- Create and manage workspaces.
-- Manage workspace members.
-- Invite users to the workspace.
-- Assign member roles.
+- Create, update, and delete workspaces.
+- Manage workspace memberships.
+- Invite users to a workspace.
+- Accept, reject, and cancel workspace invitations.
+- Assign roles through workspace invitations.
+- Automatically create memberships when invitations are accepted.
+- Enforce role-based access control.
 - Ensure each workspace has exactly one owner.
 - Prevent duplicate memberships.
-- Validate workspace invitations.
-
----
+- Prevent duplicate pending invitations.
 
 # Project Aggregate
 

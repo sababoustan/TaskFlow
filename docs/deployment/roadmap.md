@@ -92,24 +92,23 @@ Status: Completed
 
 ## Goal
 
-Allow users to collaborate inside workspaces.
+Allow users to create and collaborate inside workspaces.
 
 ## Features
 
-* Create Workspace
-* Update Workspace
-* Delete Workspace
-* Workspace Slug
-* Workspace Owner
-* Membership Management
-* Role Management
-* Permission Validation
+- Workspace CRUD
+- Workspace Slug Generation
+- Workspace Ownership
+- Membership Management
+- Role-Based Access Control (RBAC)
+- Permission Validation
 
 ## Deliverables
 
-* Multi-workspace support
+- Multi-workspace support
+- Secure workspace access control
 
-Status: Planned
+**Status:** ✅ Completed
 
 ---
 
@@ -117,22 +116,25 @@ Status: Planned
 
 ## Goal
 
-Invite users into workspaces.
+Enable workspace owners and admins to invite existing users into workspaces.
 
 ## Features
 
-* Invite User
-* Invitation Token
-* Email Invitation
-* Accept Invitation
-* Reject Invitation
-* Expiration Validation
+- Invite Existing User
+- List Workspace Invitations
+- Accept Invitation
+- Reject Invitation
+- Cancel Invitation
+- Automatic Membership Creation
+- Duplicate Invitation Validation
+- Duplicate Membership Validation
 
 ## Deliverables
 
-* Complete invitation workflow
+- Complete invitation workflow
+- Membership creation after invitation acceptance
 
-Status: Planned
+**Status:** ✅ Completed
 
 ---
 

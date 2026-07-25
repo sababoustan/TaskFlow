@@ -1,8 +1,7 @@
-
 Table User {
   id int [pk, increment]
-  email varchar [unique]
-  password varchar
+  email varchar [not null, unique]
+  password varchar [not null]
   full_name varchar [note: "Optional"]
   is_active bool
   is_staff bool
@@ -11,72 +10,116 @@ Table User {
   updated_at datetime
 }
 
+Enum Role {
+  Admin
+  Manager
+  Member
+  Viewer
+}
+
+Enum InvitationStatus {
+  pending
+  accepted
+  rejected
+  cancelled
+}
+
+Enum NotificationType {
+  TASK_ASSIGNED
+  COMMENT_ADDED
+  STATUS_CHANGED
+  MENTION
+}
+
 Table Workspace {
   id int [pk, increment]
-  owner_id int
-  title varchar
+  owner_id int [not null, ref: > User.id]
+  title varchar(250) [not null]
+  slug varchar [not null, unique]
   created_at datetime
   updated_at datetime
-  slug varchar [unique]
 }
-Ref: Workspace.owner_id > User.id
 
-Enum Role {
-Admin
-Manager
-Member
-Viewer
-}
 Table Membership {
   id int [pk, increment]
-  user_id int 
-  workspace_id int 
+  user_id int [not null, ref: > User.id]
+  workspace_id int [not null, ref: > Workspace.id]
   role Role
   joined_at datetime
+
   indexes {
     (user_id, workspace_id) [unique]
+  }
 }
+
+Table WorkspaceInvitation {
+  id int [pk, increment]
+  invited_by_id int [not null, ref: > User.id]
+  workspace_id int [not null, ref: > Workspace.id]
+  user_id int [not null, ref: > User.id]
+  role Role
+  status InvitationStatus
+  created_at datetime
+
+  indexes {
+    (user_id, workspace_id) [name: "unique_pending_invitation"]
+  }
 }
-Ref: Membership.user_id > User.id
-Ref: Membership.workspace_id > Workspace.id
 
 Table Project {
   id int [pk, increment]
-  workspace_id int
-  name varchar
+  workspace_id int [not null]
+  name varchar [not null]
   description varchar
   start_date datetime
   end_date datetime
   created_at datetime
   updated_at datetime
   is_archived bool
+
   indexes {
-        (workspace_id, name) [unique]
-    }
+    (workspace_id, name) [unique]
+  }
 }
+
 Ref: Project.workspace_id > Workspace.id
+
+Table Sprint {
+  id int [pk, increment]
+  project_id int [not null]
+  name varchar [not null]
+  start_date datetime
+  end_date datetime
+  goal varchar
+
+  indexes {
+    (project_id, name) [unique]
+  }
+}
+
+Ref: Sprint.project_id > Project.id
 
 Table Status {
   id int [pk, increment]
-  title varchar
+  title varchar [not null]
   display_order int
 }
 
 Table Priority {
   id int [pk, increment]
-  title varchar
+  title varchar [not null]
   level int
 }
 
 Table Task {
   id int [pk, increment]
-  project_id int
-  title varchar
+  project_id int [not null]
+  title varchar [not null]
   description varchar
-  status_id int
-  priority_id int
-  created_by int
-  assigned_to int [null]
+  status_id int [not null]
+  priority_id int [not null]
+  created_by int [not null]
+  assigned_to int
   position int
   created_at datetime
   updated_at datetime
@@ -84,135 +127,107 @@ Table Task {
   estimate_minutes int
   sprint_id int
 }
-Ref: Task.assigned_to > User.id
+
 Ref: Task.project_id > Project.id
 Ref: Task.status_id > Status.id
 Ref: Task.priority_id > Priority.id
 Ref: Task.created_by > User.id
+Ref: Task.assigned_to > User.id
 Ref: Task.sprint_id > Sprint.id
-
-Table Sprint {
-  id int [pk, increment]
-  project_id int
-  name varchar
-  start_date datetime
-  end_date datetime
-  goal varchar
-  indexes {
-    (project_id, name) [unique]
-}
-}
-Ref: Sprint.project_id > Project.id
 
 Table Label {
   id int [pk, increment]
-  name varchar
-  workspace_id int
+  name varchar [not null]
+  workspace_id int [not null]
   color varchar
   created_at datetime
+
   indexes {
     (workspace_id, name) [unique]
   }
 }
+
 Ref: Label.workspace_id > Workspace.id
 
 Table TaskLabel {
   id int [pk, increment]
-  added_by int
-  label_id int
-  task_id int
+  added_by int [not null]
+  label_id int [not null]
+  task_id int [not null]
+
   indexes {
     (task_id, label_id) [unique]
+  }
 }
-}
-Ref: TaskLabel.label_id > Label.id
+
 Ref: TaskLabel.added_by > User.id
+Ref: TaskLabel.label_id > Label.id
 Ref: TaskLabel.task_id > Task.id
 
 Table Comment {
   id int [pk, increment]
-  task_id int
+  task_id int [not null]
   parent_id int
-  user_id int
+  user_id int [not null]
   content varchar
   created_at datetime
 }
-Ref: Comment.user_id > User.id
+
 Ref: Comment.task_id > Task.id
 Ref: Comment.parent_id > Comment.id
-
-Enum NotificationType {
-TASK_ASSIGNED
-COMMENT_ADDED
-STATUS_CHANGED
-MENTION
-}
+Ref: Comment.user_id > User.id
 
 Table Notification {
   id int [pk, increment]
   type NotificationType
-  user_id int
+  user_id int [not null]
   title varchar
   message varchar
   data json
   read_at datetime
   created_at datetime
-  sender_id int
+  sender_id int [not null]
 }
+
 Ref: Notification.user_id > User.id
 Ref: Notification.sender_id > User.id
 
-Table Activity_log {
+Table ActivityLog {
   id int [pk, increment]
-  task_id int
-  user_id int
+  task_id int [not null]
+  user_id int [not null]
   action varchar
   old_value varchar
   new_value varchar
   created_at datetime
 }
-Ref: Activity_log.user_id > User.id
-Ref: Activity_log.task_id > Task.id
+
+Ref: ActivityLog.task_id > Task.id
+Ref: ActivityLog.user_id > User.id
 
 Table Attachment {
   id int [pk, increment]
-  task_id int
+  task_id int [not null]
   file_path varchar
-  file_size BigIntegerField
+  file_size bigint
   mime_type varchar
-  uploaded_by int
+  uploaded_by int [not null]
   created_at datetime
 }
-ref: Attachment.task_id > Task.id
-ref: Attachment.uploaded_by > User.id
 
-Enum InvitationStatus {
-PENDING
-ACCEPTED
-REJECTED
-EXPIRED
-}
-Table WorkspaceInvitation {
-  id int [pk, increment]
-  workspace_id int
-  email varchar
-  token varchar
-  role Role
-  status InvitationStatus
-  created_at datetime
-  expires_at datetime
-}
-Ref: WorkspaceInvitation.workspace_id > Workspace.id
+Ref: Attachment.task_id > Task.id
+Ref: Attachment.uploaded_by > User.id
 
 Table TaskStatusHistory {
   id int [pk, increment]
-  task_id int
-  from_status_id int
-  to_status_id int
-  changed_by int
+  task_id int [not null]
+  from_status_id int [not null]
+  to_status_id int [not null]
+  changed_by int [not null]
   created_at datetime
 }
+
 Ref: TaskStatusHistory.task_id > Task.id
-Ref: TaskStatusHistory.changed_by > User.id  
 Ref: TaskStatusHistory.from_status_id > Status.id
 Ref: TaskStatusHistory.to_status_id > Status.id
+Ref: TaskStatusHistory.changed_by > User.id
