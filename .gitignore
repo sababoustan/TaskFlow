@@ -1,15 +1,30 @@
+# Virtual Environment
+venv/
+
+# Python
 __pycache__/
 *.py[cod]
+*.pyc
+
+# Environment variables
+.env
+.env.local
+.env.production
+.env.example
+
+# Database
 *.sqlite3
 
-venv/
-.env
+# Test
+.pytest_cache/
 
+# IDE
 .vscode/
-
 .idea/
 
-/media/
-/staticfiles/
+# Django
+media/
+staticfiles/
 
+# macOS
 .DS_Store
