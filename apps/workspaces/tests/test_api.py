@@ -207,3 +207,153 @@ def test_cancel_invitation(
     workspace_invitation.refresh_from_db()
 
     assert workspace_invitation.status == InvitationStatus.CANCELLED
+
+
+@pytest.mark.django_db
+def test_get_workspace_member(
+    client,
+    user,
+    workspace,
+    membership,
+):
+    login_response = client.post(
+        "/api/v1/auth/login/",
+        {
+            "email": user.email,
+            "password": "StrongPassword123",
+        },
+        format="json",
+    )
+
+    assert login_response.status_code == 200
+    access = login_response.data["access"]
+
+    client.credentials(
+        HTTP_AUTHORIZATION=f"Bearer {access}"
+    )
+    response = client.get(
+        f"/api/v1/workspaces/{workspace.id}/members/{membership.id}/",
+    )
+
+    assert response.status_code == 200
+    data = response.data["data"]
+    assert data["id"] == membership.id
+    assert data["email"] == membership.user.email
+    assert data["role"] == membership.role
+
+
+@pytest.mark.django_db
+def test_list_membership(
+    client,
+    user,
+    workspace,
+    membership,
+):
+    login_response = client.post(
+        "/api/v1/auth/login/",
+        {
+            "email": user.email,
+            "password": "StrongPassword123",
+        },
+        format="json",
+    )
+
+    assert login_response.status_code == 200
+    access = login_response.data["access"]
+
+    client.credentials(
+        HTTP_AUTHORIZATION=f"Bearer {access}"
+    )
+    response = client.get(
+        f"/api/v1/workspaces/{workspace.id}/members/",
+    )
+
+    assert response.status_code == 200
+
+    data = response.data["data"]
+
+    assert len(data) == 1
+
+    member = data[0]
+
+    assert member["id"] == membership.id
+    assert member["email"] == membership.user.email
+    assert member["role"] == membership.role
+
+
+@pytest.mark.django_db
+def test_update_member(
+    client,
+    user,
+    workspace,
+    membership,
+):
+    login_response = client.post(
+        "/api/v1/auth/login/",
+        {
+            "email": user.email,
+            "password": "StrongPassword123",
+        },
+        format="json",
+    )
+
+    assert login_response.status_code == 200
+    access = login_response.data["access"]
+
+    client.credentials(
+        HTTP_AUTHORIZATION=f"Bearer {access}"
+    )
+    response = client.patch(
+        f"/api/v1/workspaces/{workspace.id}/members/{membership.id}/role/",
+        {
+            "role": "admin",
+        },
+        format="json",
+    )
+
+    assert response.status_code == 200
+    assert response.data["message"] == "Member updated successfully."
+
+    data = response.data["data"]
+
+    assert data["id"] == membership.id
+    assert data["email"] == membership.user.email
+    assert data["role"] == Role.ADMIN
+    assert "joined_at" in data
+
+    membership.refresh_from_db()
+
+    assert membership.role == Role.ADMIN
+
+
+@pytest.mark.django_db
+def test_delete_member(
+    client,
+    user,
+    workspace,
+    membership,
+):
+    login_response = client.post(
+        "/api/v1/auth/login/",
+        {
+            "email": user.email,
+            "password": "StrongPassword123",
+        },
+        format="json",
+    )
+
+    assert login_response.status_code == 200
+    access = login_response.data["access"]
+
+    client.credentials(
+        HTTP_AUTHORIZATION=f"Bearer {access}"
+    )
+    response = client.delete(
+        f"/api/v1/workspaces/{workspace.id}/members/{membership.id}/",
+    )
+
+    assert response.status_code == 200
+    assert response.data["message"] == f"{membership.user.email} successfully removed from the workspace."
+    assert response.data["workspace"] == membership.workspace.id
+
+    assert not Membership.objects.filter(id=membership.id).exists()
