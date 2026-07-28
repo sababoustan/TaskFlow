@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from apps.workspaces.models import Workspace, WorkspaceInvitation
+from apps.workspaces.models import Workspace, WorkspaceInvitation, Membership
 from apps.workspaces.choices import Role
 
 
@@ -25,11 +25,12 @@ class InvitationCreateSerializer(serializers.ModelSerializer):
             'role',
         ]
 
-      
+
 class InvitationSerializer(serializers.ModelSerializer):
     email = serializers.EmailField(source="user.email", read_only=True)
     invited_by = serializers.EmailField(source="invited_by.email",
                                         read_only=True)
+
     class Meta:
         model = WorkspaceInvitation
         fields = [
@@ -39,4 +40,25 @@ class InvitationSerializer(serializers.ModelSerializer):
             'role',
             'status',
             'created_at',
+        ]
+
+
+class MembershipListSerializer(serializers.ModelSerializer):
+    email = serializers.EmailField(source="user.email", read_only=True)
+
+    class Meta:
+        model = Membership
+        fields = [
+            'id',
+            'email',
+            'role',
+            'joined_at',
+        ]
+
+
+class MembershipUpdateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Membership
+        fields = [
+            'role',
         ]

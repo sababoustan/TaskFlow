@@ -100,3 +100,31 @@ def cancel_invitation(*, invitation):
     invitation.status = InvitationStatus.CANCELLED
     invitation.save(update_fields=["status"])
     return invitation
+
+
+def update_membership_role(*, membership, workspace_id, updated_by, role):
+    workspace = get_object_or_404(
+            Workspace,
+            id=workspace_id,
+        )
+    has_workspace_role(
+        workspace=workspace,
+        user=updated_by,
+        allowed_roles=[Role.ADMIN],
+    )
+    membership.role = role
+    membership.save(update_fields=["role"])
+    return membership
+
+
+def remove_workspace_member(*, membership, workspace_id, updated_by):
+    workspace = get_object_or_404(
+            Workspace,
+            id=workspace_id
+        )
+    has_workspace_role(
+        workspace=workspace,
+        user=updated_by,
+        allowed_roles=[Role.ADMIN],
+    )
+    membership.delete()
