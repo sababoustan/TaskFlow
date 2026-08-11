@@ -88,7 +88,7 @@ class MembershipViewSet(viewsets.GenericViewSet):
             status=status.HTTP_200_OK,
         )
 
-    def delete(self, request, workspace_id=None, member_id=None):
+    def destroy(self, request, workspace_id=None, member_id=None):
         membership = get_object_or_404(
             Membership,
             workspace=workspace_id,
