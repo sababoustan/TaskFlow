@@ -1,6 +1,5 @@
 from django.contrib import admin
 from .models import Workspace, Membership, WorkspaceInvitation
-
 # Register your models here.
 
 
@@ -21,7 +20,7 @@ class  MembershipeAdmin(admin.ModelAdmin):
         "workspace__title",
     )
     readonly_fields = ('joined_at',)
-    
+
 
 @admin.register(WorkspaceInvitation)
 class InvitationAdmin(admin.ModelAdmin):

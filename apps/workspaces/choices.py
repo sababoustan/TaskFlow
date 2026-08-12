@@ -6,7 +6,8 @@ class Role(models.TextChoices):
     MANAGER = "manager"
     MEMBER = "member"
     VIEWER = "viewer"
-        
+
+
 class InvitationStatus(models.TextChoices):
     PENDING = "pending"
     ACCEPTED = "accepted"

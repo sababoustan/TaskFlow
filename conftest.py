@@ -1,6 +1,7 @@
 import pytest
 from apps.users.models import User
 from rest_framework.test import APIClient    
+from apps.workspaces.models import Workspace
 
 
 @pytest.fixture
@@ -15,4 +16,11 @@ def user(db):
         full_name="test",
         password="StrongPassword123",
         is_verified=True,
+    )
+
+@pytest.fixture
+def workspace(user):
+    return Workspace.objects.create(
+        owner=user,
+        title="python",
     )

@@ -67,7 +67,10 @@ class MembershipViewSet(viewsets.GenericViewSet):
         )
 
     def update(self, request, workspace_id=None, member_id=None):
-        serializer = self.get_serializer(data=request.data)
+        serializer = self.get_serializer(
+            data=request.data,
+            partial=True
+        )
         serializer.is_valid(raise_exception=True)
         membership = get_object_or_404(
             Membership,

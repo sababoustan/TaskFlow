@@ -1,5 +1,5 @@
 import pytest
-from apps.workspaces.models import Workspace, WorkspaceInvitation, Membership
+from apps.workspaces.models import WorkspaceInvitation, Membership
 from apps.users.models import User
 from apps.workspaces.choices import Role
 
@@ -10,14 +10,6 @@ def invited_user(db):
         email="sadafboustan@gmail.com",
         password="StrongPassword123",
         is_verified=True,
-    )
-
-
-@pytest.fixture
-def workspace(user):
-    return Workspace.objects.create(
-        owner=user,
-        title="python",
     )
 
 
