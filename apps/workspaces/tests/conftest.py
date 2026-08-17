@@ -1,7 +1,8 @@
 import pytest
-from apps.workspaces.models import WorkspaceInvitation, Membership
+
 from apps.users.models import User
 from apps.workspaces.choices import Role
+from apps.workspaces.models import Membership, WorkspaceInvitation
 
 
 @pytest.fixture
@@ -16,10 +17,7 @@ def invited_user(db):
 @pytest.fixture
 def workspace_invitation(user, workspace, invited_user):
     return WorkspaceInvitation.objects.create(
-        invited_by=user,
-        workspace=workspace,
-        user=invited_user,
-        role=Role.MEMBER
+        invited_by=user, workspace=workspace, user=invited_user, role=Role.MEMBER
     )
 
 
@@ -28,5 +26,5 @@ def membership(workspace_invitation):
     return Membership.objects.create(
         user=workspace_invitation.user,
         workspace=workspace_invitation.workspace,
-        role=workspace_invitation.role
+        role=workspace_invitation.role,
     )

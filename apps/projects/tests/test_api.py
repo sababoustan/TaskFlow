@@ -1,13 +1,13 @@
 import pytest
 from rest_framework import status
-from apps.projects.models import Status, Workflow, Project, WorkflowStatus
+
+from apps.projects.models import Project, Status, Workflow, WorkflowStatus
 
 STATUS_URL = "/api/v1/projects/statuses/"
 
 
 @pytest.mark.django_db
 class TestStatusAPI:
-
     def test_list_status_requires_authentication(
         self,
         api_client,
@@ -33,16 +33,12 @@ class TestStatusAPI:
     ):
         response = admin_client.post(
             STATUS_URL,
-            {
-                "name": "In Progress"
-            },
+            {"name": "In Progress"},
             format="json",
         )
 
         assert response.status_code == status.HTTP_201_CREATED
-        assert Status.objects.filter(
-            name="In Progress"
-        ).exists()
+        assert Status.objects.filter(name="In Progress").exists()
 
     def test_normal_user_cannot_create_status(
         self,
@@ -50,9 +46,7 @@ class TestStatusAPI:
     ):
         response = authenticated_client.post(
             STATUS_URL,
-            {
-                "name": "In Progress"
-            },
+            {"name": "In Progress"},
             format="json",
         )
 
@@ -67,9 +61,7 @@ class TestStatusAPI:
 
         response = admin_client.patch(
             url,
-            {
-                "name": "Done"
-            },
+            {"name": "Done"},
             format="json",
         )
 
@@ -88,9 +80,7 @@ class TestStatusAPI:
 
         response = authenticated_client.patch(
             url,
-            {
-                "name": "Done"
-            },
+            {"name": "Done"},
             format="json",
         )
 
@@ -106,9 +96,7 @@ class TestStatusAPI:
         response = admin_client.delete(url)
 
         assert response.status_code == status.HTTP_204_NO_CONTENT
-        assert not Status.objects.filter(
-            id=status_obj.id
-        ).exists()
+        assert not Status.objects.filter(id=status_obj.id).exists()
 
     def test_normal_user_cannot_delete_status(
         self,
@@ -120,9 +108,7 @@ class TestStatusAPI:
         response = authenticated_client.delete(url)
 
         assert response.status_code == status.HTTP_403_FORBIDDEN
-        assert Status.objects.filter(
-            id=status_obj.id
-        ).exists()
+        assert Status.objects.filter(id=status_obj.id).exists()
 
 
 WORKFLOW_URL = "/api/v1/projects/{}/workflows/"
@@ -131,7 +117,6 @@ WORKFLOW_DETAIL_URL = "/api/v1/projects/{}/workflows/{}/"
 
 @pytest.mark.django_db
 class TestWorkflowAPI:
-
     def test_list_workflows_requires_authentication(
         self,
         api_client,
@@ -199,9 +184,7 @@ class TestWorkflowAPI:
 
         response = api_client.post(
             url,
-            {
-                "name": "Development"
-            },
+            {"name": "Development"},
             format="json",
         )
 
@@ -225,9 +208,7 @@ class TestWorkflowAPI:
 
         response = api_client.post(
             url,
-            {
-                "name": "Development"
-            },
+            {"name": "Development"},
             format="json",
         )
 
@@ -246,16 +227,14 @@ class TestWorkflowAPI:
 
         response = api_client.post(
             url,
-            {
-                "name": "Development"
-            },
+            {"name": "Development"},
             format="json",
         )
 
         assert response.status_code == status.HTTP_403_FORBIDDEN
         assert response.data["detail"] == (
-                    "You do not have permission to perform this action."
-                )
+            "You do not have permission to perform this action."
+        )
 
     def test_owner_can_create_workflow(
         self,
@@ -266,9 +245,7 @@ class TestWorkflowAPI:
 
         response = authenticated_client.post(
             url,
-            {
-                "name": "Development"
-            },
+            {"name": "Development"},
             format="json",
         )
 
@@ -291,9 +268,7 @@ class TestWorkflowAPI:
 
         response = api_client.patch(
             url,
-            {
-                "name": "Production"
-            },
+            {"name": "Production"},
             format="json",
         )
 
@@ -320,16 +295,14 @@ class TestWorkflowAPI:
 
         response = api_client.patch(
             url,
-            {
-                "name": "Production"
-            },
+            {"name": "Production"},
             format="json",
         )
 
         assert response.status_code == status.HTTP_403_FORBIDDEN
         assert response.data["detail"] == (
-                "You do not have permission to perform this action."
-            )
+            "You do not have permission to perform this action."
+        )
 
         workflow.refresh_from_db()
 
@@ -352,9 +325,7 @@ class TestWorkflowAPI:
 
         response = api_client.patch(
             url,
-            {
-                "name": "Production"
-            },
+            {"name": "Production"},
             format="json",
         )
 
@@ -379,9 +350,7 @@ class TestWorkflowAPI:
 
         assert response.status_code == status.HTTP_200_OK
 
-        assert not Workflow.objects.filter(
-            id=workflow.id
-        ).exists()
+        assert not Workflow.objects.filter(id=workflow.id).exists()
 
     def test_member_cannot_delete_workflow(
         self,
@@ -405,9 +374,7 @@ class TestWorkflowAPI:
             "You do not have permission to perform this action."
         )
 
-        assert Workflow.objects.filter(
-            id=workflow.id
-        ).exists()
+        assert Workflow.objects.filter(id=workflow.id).exists()
 
     def test_delete_nonexistent_workflow(
         self,
@@ -474,12 +441,7 @@ class TestProjectAPI:
         )
 
     def test_admin_can_create_project(
-        self,
-        api_client,
-        another_user,
-        workspace,
-        workflow,
-        workspace_admin
+        self, api_client, another_user, workspace, workflow, workspace_admin
     ):
         api_client.force_authenticate(user=another_user)
 
@@ -489,10 +451,9 @@ class TestProjectAPI:
             url,
             {
                 "name": "E-commerce Platform",
-                "description":
-                    "Develop the backend and API for the e-commerce platform.",
+                "description": "Develop the backend and API for the e-commerce platform.",
             },
-                format="json",
+            format="json",
         )
 
         assert response.status_code == status.HTTP_201_CREATED
@@ -501,16 +462,11 @@ class TestProjectAPI:
             workspace=workspace,
             workflow=workflow,
             name="E-commerce Platform",
-            description="Develop the backend and API for the e-commerce platform."
+            description="Develop the backend and API for the e-commerce platform.",
         ).exists()
 
     def test_manager_can_create_project(
-        self,
-        api_client,
-        another_user,
-        workspace,
-        workspace_manager,
-        workflow
+        self, api_client, another_user, workspace, workspace_manager, workflow
     ):
         api_client.force_authenticate(user=another_user)
 
@@ -520,8 +476,7 @@ class TestProjectAPI:
             url,
             {
                 "name": "E-commerce Platform",
-                "description":
-                    "Develop the backend and API for the e-commerce platform.",
+                "description": "Develop the backend and API for the e-commerce platform.",
             },
             format="json",
         )
@@ -529,12 +484,7 @@ class TestProjectAPI:
         assert response.status_code == status.HTTP_201_CREATED
 
     def test_member_cannot_create_project(
-        self,
-        api_client,
-        another_user,
-        workspace,
-        workspace_member,
-        workflow
+        self, api_client, another_user, workspace, workspace_member, workflow
     ):
         api_client.force_authenticate(user=another_user)
 
@@ -544,8 +494,7 @@ class TestProjectAPI:
             url,
             {
                 "name": "E-commerce Platform",
-                "description":
-                    "Develop the backend and API for the e-commerce platform.",
+                "description": "Develop the backend and API for the e-commerce platform.",
             },
             format="json",
         )
@@ -555,20 +504,14 @@ class TestProjectAPI:
             "You do not have permission to perform this action."
         )
 
-    def test_owner_can_create_project(
-        self,
-        authenticated_client,
-        workspace,
-        workflow
-    ):
+    def test_owner_can_create_project(self, authenticated_client, workspace, workflow):
         url = PROJECT_CREATE_URL.format(workspace.id, workflow.id)
 
         response = authenticated_client.post(
             url,
             {
                 "name": "E-commerce Platform",
-                "description":
-                    "Develop the backend and API for the e-commerce platform.",
+                "description": "Develop the backend and API for the e-commerce platform.",
             },
             format="json",
         )
@@ -592,9 +535,7 @@ class TestProjectAPI:
 
         response = api_client.patch(
             url,
-            {
-                "name": "Shop"
-            },
+            {"name": "Shop"},
             format="json",
         )
 
@@ -621,16 +562,14 @@ class TestProjectAPI:
 
         response = api_client.patch(
             url,
-            {
-                "name": "Production"
-            },
+            {"name": "Production"},
             format="json",
         )
 
         assert response.status_code == status.HTTP_403_FORBIDDEN
         assert response.data["detail"] == (
-                "You do not have permission to perform this action."
-            )
+            "You do not have permission to perform this action."
+        )
 
         project.refresh_from_db()
 
@@ -653,9 +592,7 @@ class TestProjectAPI:
 
         response = api_client.patch(
             url,
-            {
-                "name": "Production"
-            },
+            {"name": "Production"},
             format="json",
         )
 
@@ -672,7 +609,6 @@ WORKFLOW_STATUS_DETAIL_URL = "/api/v1/projects/workflow_status/{}/"
 
 @pytest.mark.django_db
 class TestWorkflowStatusAPI:
-
     def test_list_workflows_status_requires_authentication(
         self,
         api_client,
@@ -717,9 +653,7 @@ class TestWorkflowStatusAPI:
         authenticated_client,
         workflow_status_another,
     ):
-        url = WORKFLOW_STATUS_URL.format(
-            workflow_status_another.workflow.id
-        )
+        url = WORKFLOW_STATUS_URL.format(workflow_status_another.workflow.id)
         response = authenticated_client.get(url)
 
         assert response.status_code == status.HTTP_403_FORBIDDEN
@@ -742,10 +676,7 @@ class TestWorkflowStatusAPI:
 
         response = api_client.post(
             url,
-            {
-                "status_id": status_obj.id,
-                "order": 1
-            },
+            {"status_id": status_obj.id, "order": 1},
             format="json",
         )
         assert response.status_code == status.HTTP_201_CREATED
@@ -755,7 +686,7 @@ class TestWorkflowStatusAPI:
             status=status_obj,
             order=1,
         ).exists()
-        
+
         re_creation = api_client.post(
             url,
             {
@@ -771,12 +702,7 @@ class TestWorkflowStatusAPI:
         )
 
     def test_manager_can_create_workflow_status(
-        self,
-        api_client,
-        another_user,
-        workflow,
-        workspace_manager,
-        status_obj
+        self, api_client, another_user, workflow, workspace_manager, status_obj
     ):
         api_client.force_authenticate(user=another_user)
 
@@ -784,10 +710,7 @@ class TestWorkflowStatusAPI:
 
         response = api_client.post(
             url,
-            {
-                "status_id": status_obj.id,
-                "order": 1
-            },
+            {"status_id": status_obj.id, "order": 1},
             format="json",
         )
 
@@ -799,12 +722,7 @@ class TestWorkflowStatusAPI:
         ).exists()
 
     def test_member_cannot_create_workflow_status(
-        self,
-        api_client,
-        another_user,
-        workflow,
-        workspace_member,
-        status_obj
+        self, api_client, another_user, workflow, workspace_member, status_obj
     ):
         api_client.force_authenticate(user=another_user)
 
@@ -812,17 +730,14 @@ class TestWorkflowStatusAPI:
 
         response = api_client.post(
             url,
-            {
-                "status_id": status_obj.id,
-                "order": 1
-            },
+            {"status_id": status_obj.id, "order": 1},
             format="json",
         )
 
         assert response.status_code == status.HTTP_403_FORBIDDEN
         assert response.data["detail"] == (
-                    "You do not have permission to perform this action."
-                )
+            "You do not have permission to perform this action."
+        )
 
     def test_owner_can_create_workflow_status(
         self,
@@ -834,10 +749,7 @@ class TestWorkflowStatusAPI:
 
         response = authenticated_client.post(
             url,
-            {
-                "status_id": status_obj.id,
-                "order": 1
-            },
+            {"status_id": status_obj.id, "order": 1},
             format="json",
         )
 
@@ -858,9 +770,7 @@ class TestWorkflowStatusAPI:
 
         response = api_client.patch(
             url,
-            {
-                "order": 2
-            },
+            {"order": 2},
             format="json",
         )
 
@@ -885,16 +795,14 @@ class TestWorkflowStatusAPI:
 
         response = api_client.patch(
             url,
-            {   
-                "order": 2
-            },
+            {"order": 2},
             format="json",
         )
 
         assert response.status_code == status.HTTP_403_FORBIDDEN
         assert response.data["detail"] == (
-                "You do not have permission to perform this action."
-            )
+            "You do not have permission to perform this action."
+        )
 
         workflow_status.refresh_from_db()
 
@@ -915,9 +823,7 @@ class TestWorkflowStatusAPI:
 
         response = api_client.patch(
             url,
-            {
-                "order": 2
-            },
+            {"order": 2},
             format="json",
         )
 
@@ -940,9 +846,7 @@ class TestWorkflowStatusAPI:
 
         assert response.status_code == status.HTTP_204_NO_CONTENT
 
-        assert not WorkflowStatus.objects.filter(
-            id=workflow_status.id
-        ).exists()
+        assert not WorkflowStatus.objects.filter(id=workflow_status.id).exists()
 
     def test_member_cannot_delete_workflow_status(
         self,
@@ -964,9 +868,7 @@ class TestWorkflowStatusAPI:
             "You do not have permission to perform this action."
         )
 
-        assert WorkflowStatus.objects.filter(
-            id=workflow_status.id
-        ).exists()
+        assert WorkflowStatus.objects.filter(id=workflow_status.id).exists()
 
     def test_delete_nonexistent_workflow_status(
         self,

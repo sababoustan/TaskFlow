@@ -1,15 +1,15 @@
 from django.db import models
+
 from apps.workspaces.models import Workspace
 
 
 # Create your models here.
 class Project(models.Model):
-    workspace = models.ForeignKey(Workspace, on_delete=models.CASCADE,
-                                  related_name="projects")
+    workspace = models.ForeignKey(
+        Workspace, on_delete=models.CASCADE, related_name="projects"
+    )
     workflow = models.ForeignKey(
-        "Workflow",
-        on_delete=models.PROTECT,
-        related_name="projects"
+        "Workflow", on_delete=models.PROTECT, related_name="projects"
     )
     name = models.CharField(max_length=255)
     description = models.TextField(blank=True)
@@ -44,10 +44,7 @@ class Status(models.Model):
 
 
 class Workflow(models.Model):
-    workspace = models.ForeignKey(
-        Workspace,
-        on_delete=models.CASCADE
-    )
+    workspace = models.ForeignKey(Workspace, on_delete=models.CASCADE)
     name = models.CharField(max_length=100)
 
     def __str__(self):
@@ -55,23 +52,24 @@ class Workflow(models.Model):
 
 
 class WorkflowStatus(models.Model):
-    workflow = models.ForeignKey(Workflow, on_delete=models.CASCADE,
-                                 related_name="workflow_statuses")
-    status = models.ForeignKey(Status, on_delete=models.CASCADE,
-                               related_name="workflow_statuses")
+    workflow = models.ForeignKey(
+        Workflow, on_delete=models.CASCADE, related_name="workflow_statuses"
+    )
+    status = models.ForeignKey(
+        Status, on_delete=models.CASCADE, related_name="workflow_statuses"
+    )
     order = models.PositiveIntegerField()
 
     class Meta:
         ordering = ["order"]
         constraints = [
             models.UniqueConstraint(
-                fields=["workflow", "status"],
-                name="unique_workflow_status"
+                fields=["workflow", "status"], name="unique_workflow_status"
             ),
             models.UniqueConstraint(
                 fields=["workflow", "order"],
                 name="unique_workflow_order",
-            )
+            ),
         ]
 
     def __str__(self):

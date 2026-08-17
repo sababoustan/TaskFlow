@@ -1,12 +1,13 @@
-from rest_framework import serializers
-from apps.users.models import User
+from django.contrib.auth import authenticate
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError
-from django.contrib.auth import authenticate
-from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from django.utils.translation import gettext_lazy as _
+from rest_framework import serializers
 from rest_framework.exceptions import AuthenticationFailed
 from rest_framework_simplejwt.exceptions import TokenError
+from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
+
+from apps.users.models import User
 from apps.users.services import blacklist_refresh_token
 
 
@@ -23,27 +24,23 @@ class RegisterSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ['email', 'full_name', 'password', 'password1']
+        fields = ["email", "full_name", "password", "password1"]
 
     def validate(self, attrs):
         password = attrs.get("password")
         password1 = attrs.get("password1")
 
         if password != password1:
-            raise serializers.ValidationError(
-                {"password1": "Passwords do not match."}
-            )
+            raise serializers.ValidationError({"password1": "Passwords do not match."})
 
         try:
             validate_password(password)
         except ValidationError as e:
-            raise serializers.ValidationError(
-                {"password": list(e.messages)}
-            )
+            raise serializers.ValidationError({"password": list(e.messages)})
         return attrs
 
     def create(self, validated_data):
-        validated_data.pop('password1', None)
+        validated_data.pop("password1", None)
         return User.objects.create_user(**validated_data)
 
 
@@ -79,19 +76,13 @@ class LoginSerializer(TokenObtainPairSerializer):
         )
 
         if user is None:
-            raise AuthenticationFailed(
-                _("Invalid email or password.")
-            )
+            raise AuthenticationFailed(_("Invalid email or password."))
 
         if not user.is_active:
-            raise AuthenticationFailed(
-                _("User account is inactive.")
-            )
+            raise AuthenticationFailed(_("User account is inactive."))
 
         if not user.is_verified:
-            raise AuthenticationFailed(
-                _("User account is not verified.")
-            )
+            raise AuthenticationFailed(_("User account is not verified."))
 
         refresh = self.get_token(user)
 
@@ -110,13 +101,12 @@ class LoginSerializer(TokenObtainPairSerializer):
 
 
 class ProfileSerializer(serializers.ModelSerializer):
-
     class Meta:
         model = User
         fields = [
-            'id',
-            'email',
-            'full_name',
+            "id",
+            "email",
+            "full_name",
         ]
         read_only_fields = (
             "id",
@@ -151,30 +141,22 @@ class ChangePasswordSerializer(serializers.Serializer):
 
         if not user.check_password(old_password):
             raise serializers.ValidationError(
-                {
-                    "old_password": "Old password is incorrect."
-                }
+                {"old_password": "Old password is incorrect."}
             )
 
         if new_password != confirm_password:
             raise serializers.ValidationError(
-                    {"confirm_password": "Passwords do not match."}
-                )
+                {"confirm_password": "Passwords do not match."}
+            )
 
         if user.check_password(new_password):
             raise serializers.ValidationError(
-                {
-                    "new_password": "New password cannot be the same as the old password."
-                }
+                {"new_password": "New password cannot be the same as the old password."}
             )
 
         try:
             validate_password(new_password, user)
         except ValidationError as e:
-            raise serializers.ValidationError(
-                {
-                    "new_password": list(e.messages)
-                }
-            )
+            raise serializers.ValidationError({"new_password": list(e.messages)})
 
         return attrs

@@ -1,9 +1,9 @@
 import pytest
-from rest_framework.test import APIClient
 from django.contrib.auth import get_user_model
+from rest_framework.test import APIClient
 
-from apps.projects.models import Status, Workflow, Project, WorkflowStatus
-from apps.workspaces.models import Workspace, Membership, Role
+from apps.projects.models import Project, Status, Workflow, WorkflowStatus
+from apps.workspaces.models import Membership, Role, Workspace
 
 
 @pytest.fixture
@@ -74,16 +74,12 @@ def workspace_manager(db, another_user, workspace):
 
 @pytest.fixture
 def status_obj(db):
-    return Status.objects.create(
-        name="To Do"
-    )
+    return Status.objects.create(name="To Do")
 
 
 @pytest.fixture
 def status_obj_another(db):
-    return Status.objects.create(
-        name="Done"
-    )
+    return Status.objects.create(name="Done")
 
 
 @pytest.fixture
@@ -126,17 +122,11 @@ def project(db, workspace, workflow):
 
 @pytest.fixture
 def workflow_status(db, workflow, status_obj):
-    return WorkflowStatus.objects.create(
-        workflow=workflow,
-        status=status_obj,
-        order=1
-    )
+    return WorkflowStatus.objects.create(workflow=workflow, status=status_obj, order=1)
 
 
 @pytest.fixture
 def workflow_status_another(db, workflow_another, status_obj):
     return WorkflowStatus.objects.create(
-        workflow=workflow_another,
-        status=status_obj,
-        order=1
+        workflow=workflow_another, status=status_obj, order=1
     )

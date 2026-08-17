@@ -1,7 +1,7 @@
-from pathlib import Path
-import environ
 from datetime import timedelta
+from pathlib import Path
 
+import environ
 
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
@@ -25,13 +25,11 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
-
     # Third-party Apps
     "drf_spectacular",
     "rest_framework",
     "rest_framework_simplejwt",
     "rest_framework_simplejwt.token_blacklist",
-    
     # Project Apps
     "apps.users",
     "apps.workspaces",
@@ -60,10 +58,7 @@ REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": (
         "rest_framework_simplejwt.authentication.JWTAuthentication",
     ),
-
-    "DEFAULT_SCHEMA_CLASS": (
-        "drf_spectacular.openapi.AutoSchema"
-    ),
+    "DEFAULT_SCHEMA_CLASS": ("drf_spectacular.openapi.AutoSchema"),
 }
 
 SPECTACULAR_SETTINGS = {
@@ -75,10 +70,8 @@ SPECTACULAR_SETTINGS = {
 SIMPLE_JWT = {
     "ACCESS_TOKEN_LIFETIME": timedelta(minutes=15),
     "REFRESH_TOKEN_LIFETIME": timedelta(days=7),
-
     "ROTATE_REFRESH_TOKENS": True,
     "BLACKLIST_AFTER_ROTATION": True,
-
     "UPDATE_LAST_LOGIN": True,
 }
 

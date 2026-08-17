@@ -1,21 +1,21 @@
-from rest_framework import viewsets
+from django.shortcuts import get_object_or_404
+from rest_framework import status, viewsets
 from rest_framework.permissions import IsAuthenticated
-from .serializers import MembershipListSerializer, MembershipUpdateSerializer
+from rest_framework.response import Response
+
+from apps.workspaces.choices import Role
 from apps.workspaces.models import Membership, Workspace
 from apps.workspaces.permissions import has_workspace_role
-from django.shortcuts import get_object_or_404
-from apps.workspaces.choices import Role
-from rest_framework.response import Response
-from rest_framework import status
-from apps.workspaces.services import update_membership_role, remove_workspace_member
+from apps.workspaces.services import remove_workspace_member, update_membership_role
+
+from .serializers import MembershipListSerializer, MembershipUpdateSerializer
 
 
 class MembershipViewSet(viewsets.GenericViewSet):
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
-        return Membership.objects.filter(
-            workspace=self.kwargs["workspace_id"])
+        return Membership.objects.filter(workspace=self.kwargs["workspace_id"])
 
     def get_serializer_class(self):
         if self.action in ("list", "retrieve"):
@@ -24,38 +24,29 @@ class MembershipViewSet(viewsets.GenericViewSet):
         if self.action == "update":
             return MembershipUpdateSerializer
 
-    def retrieve(self, request, workspace_id=None, member_id= None):
-        workspace = get_object_or_404(
-            Workspace,
-            id=workspace_id
-        )
+    def retrieve(self, request, workspace_id=None, member_id=None):
+        workspace = get_object_or_404(Workspace, id=workspace_id)
         has_workspace_role(
             workspace=workspace,
             user=request.user,
             allowed_roles=[Role.ADMIN],
-            )
-        membership = get_object_or_404(
-            Membership,
-            workspace=workspace,
-            id=member_id
         )
+        membership = get_object_or_404(Membership, workspace=workspace, id=member_id)
         serializer = self.get_serializer(membership)
         return Response(
             {
                 "data": serializer.data,
-            }, status=status.HTTP_200_OK
+            },
+            status=status.HTTP_200_OK,
         )
-        
+
     def list(self, request, workspace_id=None):
-        workspace = get_object_or_404(
-            Workspace,
-            id=workspace_id
-        )
+        workspace = get_object_or_404(Workspace, id=workspace_id)
         has_workspace_role(
             workspace=workspace,
             user=request.user,
             allowed_roles=[Role.ADMIN],
-            )
+        )
         serializer = self.get_serializer(
             self.get_queryset(),
             many=True,
@@ -63,20 +54,14 @@ class MembershipViewSet(viewsets.GenericViewSet):
         return Response(
             {
                 "data": serializer.data,
-            }, status=status.HTTP_200_OK
+            },
+            status=status.HTTP_200_OK,
         )
 
     def update(self, request, workspace_id=None, member_id=None):
-        serializer = self.get_serializer(
-            data=request.data,
-            partial=True
-        )
+        serializer = self.get_serializer(data=request.data, partial=True)
         serializer.is_valid(raise_exception=True)
-        membership = get_object_or_404(
-            Membership,
-            workspace=workspace_id,
-            id=member_id
-        )
+        membership = get_object_or_404(Membership, workspace=workspace_id, id=member_id)
         membership = update_membership_role(
             membership=membership,
             updated_by=request.user,
@@ -92,11 +77,7 @@ class MembershipViewSet(viewsets.GenericViewSet):
         )
 
     def destroy(self, request, workspace_id=None, member_id=None):
-        membership = get_object_or_404(
-            Membership,
-            workspace=workspace_id,
-            id=member_id
-        )
+        membership = get_object_or_404(Membership, workspace=workspace_id, id=member_id)
         remove_workspace_member(
             membership=membership,
             workspace_id=workspace_id,

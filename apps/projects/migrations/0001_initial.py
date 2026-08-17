@@ -5,63 +5,137 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     initial = True
 
     dependencies = [
-        ('workspaces', '0002_workspaceinvitation'),
+        ("workspaces", "0002_workspaceinvitation"),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='Status',
+            name="Status",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('name', models.CharField(max_length=100, unique=True)),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("name", models.CharField(max_length=100, unique=True)),
             ],
             options={
-                'verbose_name': 'Status',
-                'verbose_name_plural': 'Statuses',
+                "verbose_name": "Status",
+                "verbose_name_plural": "Statuses",
             },
         ),
         migrations.CreateModel(
-            name='Workflow',
+            name="Workflow",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('name', models.CharField(max_length=100)),
-                ('workspace', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='workspaces.workspace')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("name", models.CharField(max_length=100)),
+                (
+                    "workspace",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        to="workspaces.workspace",
+                    ),
+                ),
             ],
         ),
         migrations.CreateModel(
-            name='Project',
+            name="Project",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('name', models.CharField(max_length=255)),
-                ('description', models.TextField(blank=True)),
-                ('start_date', models.DateTimeField(blank=True, null=True)),
-                ('end_date', models.DateTimeField(blank=True, null=True)),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('updated_at', models.DateTimeField(auto_now=True)),
-                ('is_archived', models.BooleanField(default=False)),
-                ('workspace', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='projects', to='workspaces.workspace')),
-                ('workflow', models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, related_name='projects', to='projects.workflow')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("name", models.CharField(max_length=255)),
+                ("description", models.TextField(blank=True)),
+                ("start_date", models.DateTimeField(blank=True, null=True)),
+                ("end_date", models.DateTimeField(blank=True, null=True)),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                ("updated_at", models.DateTimeField(auto_now=True)),
+                ("is_archived", models.BooleanField(default=False)),
+                (
+                    "workspace",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="projects",
+                        to="workspaces.workspace",
+                    ),
+                ),
+                (
+                    "workflow",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.PROTECT,
+                        related_name="projects",
+                        to="projects.workflow",
+                    ),
+                ),
             ],
             options={
-                'ordering': ['-created_at'],
-                'constraints': [models.UniqueConstraint(fields=('workspace', 'name'), name='unique_workspace_project_name')],
+                "ordering": ["-created_at"],
+                "constraints": [
+                    models.UniqueConstraint(
+                        fields=("workspace", "name"),
+                        name="unique_workspace_project_name",
+                    )
+                ],
             },
         ),
         migrations.CreateModel(
-            name='WorkflowStatus',
+            name="WorkflowStatus",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('order', models.PositiveIntegerField()),
-                ('status', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='workflow_statuses', to='projects.status')),
-                ('workflow', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='workflow_statuses', to='projects.workflow')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("order", models.PositiveIntegerField()),
+                (
+                    "status",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="workflow_statuses",
+                        to="projects.status",
+                    ),
+                ),
+                (
+                    "workflow",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="workflow_statuses",
+                        to="projects.workflow",
+                    ),
+                ),
             ],
             options={
-                'ordering': ['order'],
-                'constraints': [models.UniqueConstraint(fields=('workflow', 'status'), name='unique_workflow_status')],
+                "ordering": ["order"],
+                "constraints": [
+                    models.UniqueConstraint(
+                        fields=("workflow", "status"), name="unique_workflow_status"
+                    )
+                ],
             },
         ),
     ]

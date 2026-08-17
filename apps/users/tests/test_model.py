@@ -1,5 +1,6 @@
 import pytest
 
+
 @pytest.mark.django_db
 def test_create_user(user):
     assert user.email == "testuser@gmail.com"

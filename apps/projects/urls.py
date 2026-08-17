@@ -1,8 +1,7 @@
-from django.urls import path, include
+from django.urls import include, path
 
-
-app_name = 'projects'
+app_name = "projects"
 
 urlpatterns = [
-    path('projects/', include('apps.projects.api.v1.urls')),
+    path("projects/", include("apps.projects.api.v1.urls")),
 ]

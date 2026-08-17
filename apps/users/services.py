@@ -1,6 +1,6 @@
 from rest_framework_simplejwt.token_blacklist.models import (
-    OutstandingToken,
     BlacklistedToken,
+    OutstandingToken,
 )
 from rest_framework_simplejwt.tokens import RefreshToken
 

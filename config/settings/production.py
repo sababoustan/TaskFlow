@@ -1,8 +1,6 @@
 from .base import *
 
-ALLOWED_HOSTS = [
-    env("DOMAIN_NAME", default="localhost")
-]
+ALLOWED_HOSTS = [env("DOMAIN_NAME", default="localhost")]
 DEBUG = False
 
 DATABASES = {

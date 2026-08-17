@@ -1,65 +1,61 @@
 from django.urls import path
-# from rest_framework.routers import DefaultRouter
-from .views import (StatusViewSet, WorkflowViewSet, ProjectViewSet, WorkflowStatusViewSet)
 
-app_name = 'api/v1'
+# from rest_framework.routers import DefaultRouter
+from .views import ProjectViewSet, StatusViewSet, WorkflowStatusViewSet, WorkflowViewSet
+
+app_name = "api/v1"
 
 
 urlpatterns = [
     path(
         "statuses/",
-        StatusViewSet.as_view({
-            "get": "list",
-            "post": "create",
-        }),
+        StatusViewSet.as_view(
+            {
+                "get": "list",
+                "post": "create",
+            }
         ),
+    ),
     path(
         "statuses/<int:pk>/",
-        StatusViewSet.as_view({
-            "patch": "partial_update",
-            "delete": "destroy",
-        }),
+        StatusViewSet.as_view(
+            {
+                "patch": "partial_update",
+                "delete": "destroy",
+            }
         ),
+    ),
     path(
-        '<int:workspace_id>/workflows/',
-        WorkflowViewSet.as_view({
-            "get": "list", "post": "create"
-             }),
-         ),
+        "<int:workspace_id>/workflows/",
+        WorkflowViewSet.as_view({"get": "list", "post": "create"}),
+    ),
     path(
-        '<int:workspace_id>/workflows/<int:workflow_id>/',
-        WorkflowViewSet.as_view({
-             "patch": "update", "delete": "destroy"
-             }),
-         ),
+        "<int:workspace_id>/workflows/<int:workflow_id>/",
+        WorkflowViewSet.as_view({"patch": "update", "delete": "destroy"}),
+    ),
     path(
-        '<int:workspace_id>/projects/',
-        ProjectViewSet.as_view({
-            "get": "list"
-            }),
-         ),
+        "<int:workspace_id>/projects/",
+        ProjectViewSet.as_view({"get": "list"}),
+    ),
     path(
-        '<int:workspace_id>/workflows/<int:workflow_id>/projects/',
-        ProjectViewSet.as_view({
-            "post": "create"
-            }),
-         ),
+        "<int:workspace_id>/workflows/<int:workflow_id>/projects/",
+        ProjectViewSet.as_view({"post": "create"}),
+    ),
     path(
-        '<int:workspace_id>/projects/<int:project_id>/',
-        ProjectViewSet.as_view({
-            "patch": "update"
-            }),
-         ),
+        "<int:workspace_id>/projects/<int:project_id>/",
+        ProjectViewSet.as_view({"patch": "update"}),
+    ),
     path(
-        '<int:workflow_id>/workflow_status/',
-        WorkflowStatusViewSet.as_view({
-            "get": "list", "post": "create",
-             }),
-         ),
+        "<int:workflow_id>/workflow_status/",
+        WorkflowStatusViewSet.as_view(
+            {
+                "get": "list",
+                "post": "create",
+            }
+        ),
+    ),
     path(
-        'workflow_status/<int:workflow_status_id>/',
-        WorkflowStatusViewSet.as_view({
-             "patch": "update", "delete": "destroy"
-             }),
-         ),
+        "workflow_status/<int:workflow_status_id>/",
+        WorkflowStatusViewSet.as_view({"patch": "update", "delete": "destroy"}),
+    ),
 ]

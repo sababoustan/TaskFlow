@@ -1,9 +1,10 @@
 import pytest
-from apps.workspaces.models import WorkspaceInvitation, Membership
+
 from apps.workspaces.choices import (
-    Role,
     InvitationStatus,
+    Role,
 )
+from apps.workspaces.models import Membership, WorkspaceInvitation
 
 
 @pytest.mark.django_db
@@ -25,9 +26,7 @@ def test_create_invitation(
     assert login_response.status_code == 200
     access = login_response.data["access"]
 
-    client.credentials(
-        HTTP_AUTHORIZATION=f"Bearer {access}"
-    )
+    client.credentials(HTTP_AUTHORIZATION=f"Bearer {access}")
 
     response = client.post(
         f"/api/v1/workspaces/{workspace.id}/invitations/",
@@ -72,9 +71,7 @@ def test_list_invitations(
     assert login_response.status_code == 200
     access = login_response.data["access"]
 
-    client.credentials(
-        HTTP_AUTHORIZATION=f"Bearer {access}"
-    )
+    client.credentials(HTTP_AUTHORIZATION=f"Bearer {access}")
 
     response = client.get(
         f"/api/v1/workspaces/{workspace.id}/invitations/",
@@ -109,9 +106,7 @@ def test_accept_invitation(
     assert login_response.status_code == 200
     access = login_response.data["access"]
 
-    client.credentials(
-        HTTP_AUTHORIZATION=f"Bearer {access}"
-    )
+    client.credentials(HTTP_AUTHORIZATION=f"Bearer {access}")
 
     assert not Membership.objects.filter(
         workspace=workspace,
@@ -157,9 +152,7 @@ def test_reject_invitation(
     assert login_response.status_code == 200
     access = login_response.data["access"]
 
-    client.credentials(
-        HTTP_AUTHORIZATION=f"Bearer {access}"
-    )
+    client.credentials(HTTP_AUTHORIZATION=f"Bearer {access}")
     response = client.post(
         f"/api/v1/workspaces/invitations/{workspace_invitation.id}/reject/",
     )
@@ -192,9 +185,7 @@ def test_cancel_invitation(
     assert login_response.status_code == 200
     access = login_response.data["access"]
 
-    client.credentials(
-        HTTP_AUTHORIZATION=f"Bearer {access}"
-    )
+    client.credentials(HTTP_AUTHORIZATION=f"Bearer {access}")
     response = client.post(
         f"/api/v1/workspaces/invitations/{workspace_invitation.id}/cancel/",
     )
@@ -228,9 +219,7 @@ def test_get_workspace_member(
     assert login_response.status_code == 200
     access = login_response.data["access"]
 
-    client.credentials(
-        HTTP_AUTHORIZATION=f"Bearer {access}"
-    )
+    client.credentials(HTTP_AUTHORIZATION=f"Bearer {access}")
     response = client.get(
         f"/api/v1/workspaces/{workspace.id}/members/{membership.id}/",
     )
@@ -261,9 +250,7 @@ def test_list_membership(
     assert login_response.status_code == 200
     access = login_response.data["access"]
 
-    client.credentials(
-        HTTP_AUTHORIZATION=f"Bearer {access}"
-    )
+    client.credentials(HTTP_AUTHORIZATION=f"Bearer {access}")
     response = client.get(
         f"/api/v1/workspaces/{workspace.id}/members/",
     )
@@ -300,9 +287,7 @@ def test_update_member(
     assert login_response.status_code == 200
     access = login_response.data["access"]
 
-    client.credentials(
-        HTTP_AUTHORIZATION=f"Bearer {access}"
-    )
+    client.credentials(HTTP_AUTHORIZATION=f"Bearer {access}")
     response = client.patch(
         f"/api/v1/workspaces/{workspace.id}/members/{membership.id}/role/",
         {
@@ -345,15 +330,16 @@ def test_delete_member(
     assert login_response.status_code == 200
     access = login_response.data["access"]
 
-    client.credentials(
-        HTTP_AUTHORIZATION=f"Bearer {access}"
-    )
+    client.credentials(HTTP_AUTHORIZATION=f"Bearer {access}")
     response = client.delete(
         f"/api/v1/workspaces/{workspace.id}/members/{membership.id}/",
     )
 
     assert response.status_code == 200
-    assert response.data["message"] == f"{membership.user.email} successfully removed from the workspace."
+    assert (
+        response.data["message"]
+        == f"{membership.user.email} successfully removed from the workspace."
+    )
     assert response.data["workspace"] == membership.workspace.id
 
     assert not Membership.objects.filter(id=membership.id).exists()

@@ -1,9 +1,11 @@
-from apps.workspaces.models import WorkspaceInvitation, Workspace, Membership
+from django.core.exceptions import ValidationError
+from django.shortcuts import get_object_or_404
+
 from apps.users.models import User
 from apps.workspaces.choices import InvitationStatus, Role
-from django.core.exceptions import ValidationError
+from apps.workspaces.models import Membership, Workspace, WorkspaceInvitation
+
 from .permissions import has_workspace_role
-from django.shortcuts import get_object_or_404
 
 
 def invite_user_to_workspace(*, invited_by, workspace_id, validated_data):
@@ -27,22 +29,14 @@ def invite_user_to_workspace(*, invited_by, workspace_id, validated_data):
         workspace=workspace,
         user=user,
     ).exists():
-        raise ValidationError(
-            {
-                "email": "User is already a member."
-            }
-        )
+        raise ValidationError({"email": "User is already a member."})
 
     if WorkspaceInvitation.objects.filter(
         workspace=workspace,
         user=user,
         status=InvitationStatus.PENDING,
     ).exists():
-        raise ValidationError(
-            {
-                "email": "User already has a pending invitation."
-            }
-        )
+        raise ValidationError({"email": "User already has a pending invitation."})
     return WorkspaceInvitation.objects.create(
         invited_by=invited_by,
         workspace=workspace,
@@ -54,18 +48,14 @@ def invite_user_to_workspace(*, invited_by, workspace_id, validated_data):
 def accept_invitation(*, invitation):
     if invitation.status != InvitationStatus.PENDING:
         raise ValidationError(
-            {
-                "message": "This invitation has already been processed."
-            }
+            {"message": "This invitation has already been processed."}
         )
     if Membership.objects.filter(
         workspace=invitation.workspace,
         user=invitation.user,
     ).exists():
         raise ValidationError(
-            {
-                "message": "User is already a member of this workspace."
-            }
+            {"message": "User is already a member of this workspace."}
         )
     membership = Membership.objects.create(
         user=invitation.user,
@@ -81,9 +71,7 @@ def accept_invitation(*, invitation):
 def reject_invitation(*, invitation):
     if invitation.status != InvitationStatus.PENDING:
         raise ValidationError(
-            {
-                "message": "This invitation has already been processed."
-            }
+            {"message": "This invitation has already been processed."}
         )
     invitation.status = InvitationStatus.REJECTED
     invitation.save(update_fields=["status"])
@@ -93,9 +81,7 @@ def reject_invitation(*, invitation):
 def cancel_invitation(*, invitation):
     if invitation.status != InvitationStatus.PENDING:
         raise ValidationError(
-            {
-                "message": "This invitation has already been processed."
-            }
+            {"message": "This invitation has already been processed."}
         )
     invitation.status = InvitationStatus.CANCELLED
     invitation.save(update_fields=["status"])
@@ -104,9 +90,9 @@ def cancel_invitation(*, invitation):
 
 def update_membership_role(*, membership, workspace_id, updated_by, role):
     workspace = get_object_or_404(
-            Workspace,
-            id=workspace_id,
-        )
+        Workspace,
+        id=workspace_id,
+    )
     has_workspace_role(
         workspace=workspace,
         user=updated_by,
@@ -118,10 +104,7 @@ def update_membership_role(*, membership, workspace_id, updated_by, role):
 
 
 def remove_workspace_member(*, membership, workspace_id, updated_by):
-    workspace = get_object_or_404(
-            Workspace,
-            id=workspace_id
-        )
+    workspace = get_object_or_404(Workspace, id=workspace_id)
     has_workspace_role(
         workspace=workspace,
         user=updated_by,
