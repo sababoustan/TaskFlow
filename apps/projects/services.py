@@ -5,12 +5,12 @@ from apps.workspaces.choices import Role
 from apps.workspaces.models import Workspace
 from apps.workspaces.permissions import has_workspace_role
 
-from .models import Project, Status, Workflow, WorkflowStatus
+from .models import Project, Status, Workflow, WorkflowStatus, Sprint
 
 
 class WorkflowService:
     @staticmethod
-    def create_workflow(*, user, workspace_id, data):
+    def create(*, user, workspace_id, data):
         name = data["name"]
         workspace = get_object_or_404(
             Workspace,
@@ -29,7 +29,7 @@ class WorkflowService:
             name=name,
         )
 
-    def update_workflow(*, user, workspace_id, workflow_id, name):
+    def update(*, user, workspace_id, workflow_id, name):
         workflow = get_object_or_404(Workflow, workspace=workspace_id, id=workflow_id)
         workspace = get_object_or_404(
             Workspace,
@@ -80,10 +80,7 @@ class ProjectService:
         return Project.objects.create(
             workspace=workspace,
             workflow=workflow,
-            name=name,
-            description=description,
-            start_date=start_date,
-            end_date=end_date,
+            **data
         )
 
     def update(*, user, workspace_id, project_id, data):
@@ -105,7 +102,7 @@ class ProjectService:
 
 class WorkflowStatusService:
     @staticmethod
-    def create_workflow_status(*, user, workflow_id, data):
+    def create(*, user, workflow_id, data):
         status_id = data["status_id"]
         order = data["order"]
         workflow = get_object_or_404(Workflow, id=workflow_id)
@@ -125,7 +122,7 @@ class WorkflowStatusService:
             order=order,
         )
 
-    def update_workflow_status(*, user, workflow_status_id, order):
+    def update(*, user, workflow_status_id, order):
         workflow_status = get_object_or_404(
             WorkflowStatus,
             id=workflow_status_id,
@@ -154,7 +151,7 @@ class WorkflowStatusService:
         workflow_status.save(update_fields=["order"])
         return workflow_status
 
-    def destroy_workflow_status(*, user, workflow_status_id):
+    def destroy(*, user, workflow_status_id):
         workflow_status = get_object_or_404(
             WorkflowStatus,
             id=workflow_status_id,
@@ -166,3 +163,66 @@ class WorkflowStatusService:
         )
 
         workflow_status.delete()
+
+
+class SprintService:
+    @staticmethod
+    def create(*, user, workspace_id, project_id, data):
+        name = data["name"]
+        start_date = data.get("start_date")
+        end_date = data.get("end_date")
+        goal = data.get("goal")
+        project = get_object_or_404(
+            Project,
+            id=project_id,
+            workspace_id=workspace_id,
+        )
+        has_workspace_role(
+            user=user,
+            workspace=project.workspace,
+            allowed_roles=[Role.ADMIN, Role.MANAGER],
+        )
+        if Sprint.objects.filter(project=project, name=name).exists():
+            raise ValidationError(
+                {"name": "A sprint with this name already exists in this project."}
+            )
+        return Sprint.objects.create(
+            project=project,
+            **data
+        )
+
+    def update(*, user, workspace_id, project_id, sprint_id, data):
+        project = get_object_or_404(
+            Project,
+            id=project_id,
+            workspace_id=workspace_id,
+        )
+        sprint = get_object_or_404(
+            Sprint,
+            id=sprint_id,
+            project=project,
+        )
+        has_workspace_role(
+            user=user,
+            workspace=project.workspace,
+            allowed_roles=[Role.ADMIN, Role.MANAGER],
+        )
+        for field, value in data.items():
+            setattr(sprint, field, value)
+        sprint.save(update_fields=data.keys())
+        return sprint
+
+    def destroy(*, user, workspace_id, project_id, sprint_id):
+        sprint = get_object_or_404(
+            Sprint,
+            id=sprint_id,
+            project=project_id,
+            project__workspace_id=workspace_id,
+        )
+        has_workspace_role(
+            user=user,
+            workspace=sprint.project.workspace,
+            allowed_roles=[Role.ADMIN],
+        )
+
+        sprint.delete()

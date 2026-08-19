@@ -1,7 +1,13 @@
 from django.urls import path
 
 # from rest_framework.routers import DefaultRouter
-from .views import ProjectViewSet, StatusViewSet, WorkflowStatusViewSet, WorkflowViewSet
+from .views import (
+    ProjectViewSet,
+    StatusViewSet,
+    WorkflowStatusViewSet,
+    WorkflowViewSet,
+    SprintViewSet
+)
 
 app_name = "api/v1"
 
@@ -56,6 +62,27 @@ urlpatterns = [
     ),
     path(
         "workflow_status/<int:workflow_status_id>/",
-        WorkflowStatusViewSet.as_view({"patch": "update", "delete": "destroy"}),
+        WorkflowStatusViewSet.as_view(
+            {
+                "patch": "update",
+                "delete": "destroy"
+                }
+            ),
     ),
+    path(
+        "workspaces/<int:workspace_id>/projects/<int:project_id>/sprints/",
+        SprintViewSet.as_view(
+            {
+                "get": "list",
+                "post": "create",
+            }
+        ),
+    ),
+    path(
+        "workspaces/<int:workspace_id>/projects/<int:project_id>/sprints/<int:sprint_id>/",
+        SprintViewSet.as_view({
+            "get": "retrieve",
+            "patch": "update",
+            "delete": "destroy"}),
+        ),
 ]

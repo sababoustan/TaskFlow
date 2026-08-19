@@ -7,8 +7,13 @@ from apps.workspaces.choices import Role
 from apps.workspaces.models import Workspace
 from apps.workspaces.permissions import has_workspace_role
 
-from ...models import Project, Status, Workflow, WorkflowStatus
-from ...services import ProjectService, WorkflowService, WorkflowStatusService
+from ...models import Project, Status, Workflow, WorkflowStatus, Sprint
+from ...services import (
+    ProjectService,
+    WorkflowService,
+    WorkflowStatusService,
+    SprintService
+)
 from .serializers import (
     ProjectCreateSerializer,
     ProjectListSerializer,
@@ -20,6 +25,9 @@ from .serializers import (
     WorkflowStatusListSerializer,
     WorkflowStatusUpdateSerializer,
     WorkflowUpdateSerializer,
+    SprintListSerializer,
+    SprintCreateSerializer,
+    SprintUpdateSerializer
 )
 
 
@@ -58,7 +66,7 @@ class WorkflowViewSet(viewsets.GenericViewSet):
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        workflow = WorkflowService.create_workflow(
+        workflow = WorkflowService.create(
             user=self.request.user,
             workspace_id=self.kwargs.get("workspace_id"),
             data=serializer.validated_data,
@@ -92,7 +100,7 @@ class WorkflowViewSet(viewsets.GenericViewSet):
     def update(self, request, workflow_id=None, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        workflow = WorkflowService.update_workflow(
+        workflow = WorkflowService.update(
             user=self.request.user,
             workspace_id=self.kwargs.get("workspace_id"),
             workflow_id=workflow_id,
@@ -166,12 +174,12 @@ class ProjectViewSet(viewsets.GenericViewSet):
             data=serializer.validated_data,
         )
         return Response(
-            {"message": "The project was created successfully.", "id": project.id},
+            {"message": "The project was created successfully.",
+             "id": project.id},
             status=status.HTTP_201_CREATED,
         )
 
     def update(self, request, *args, **kwargs):
-        print("🔥 PROJECT VIEWSET UPDATE")
         serializer = self.get_serializer(data=request.data, partial=True)
         serializer.is_valid(raise_exception=True)
         project_update = ProjectService.update(
@@ -226,7 +234,7 @@ class WorkflowStatusViewSet(viewsets.GenericViewSet):
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        workflow_status = WorkflowStatusService.create_workflow_status(
+        workflow_status = WorkflowStatusService.create(
             user=request.user,
             workflow_id=self.kwargs.get("workflow_id"),
             data=serializer.validated_data,
@@ -242,7 +250,7 @@ class WorkflowStatusViewSet(viewsets.GenericViewSet):
     def update(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data, partial=True)
         serializer.is_valid(raise_exception=True)
-        workflow_status = WorkflowStatusService.update_workflow_status(
+        workflow_status = WorkflowStatusService.update(
             user=request.user,
             workflow_status_id=self.kwargs.get("workflow_status_id"),
             order=serializer.validated_data["order"],
@@ -256,9 +264,116 @@ class WorkflowStatusViewSet(viewsets.GenericViewSet):
         )
 
     def destroy(self, request, *args, **kwargs):
-        workflow_status = WorkflowStatusService.destroy_workflow_status(
+        workflow_status = WorkflowStatusService.destroy(
             user=request.user,
             workflow_status_id=self.kwargs.get("workflow_status_id"),
+        )
+
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class SprintViewSet(viewsets.GenericViewSet):
+    permission_classes = [IsAuthenticated]
+
+    def get_serializer_class(self):
+        if self.action == "list":
+            return SprintListSerializer
+        elif self.action == "create":
+            return SprintCreateSerializer
+        elif self.action == "retrieve":
+            return SprintListSerializer
+        elif self.action == "update":
+            return SprintUpdateSerializer
+
+    def get_queryset(self):
+        return Sprint.objects.filter(
+            project=self.kwargs.get("project_id"),
+        ).distinct()
+
+    def list(self, request, *args, **kwargs):
+        project = get_object_or_404(
+            Project,
+            id=kwargs["project_id"],
+            workspace_id=kwargs["workspace_id"],
+        )
+        has_workspace_role(
+            user=request.user,
+            workspace=project.workspace,
+            allowed_roles=[
+                Role.ADMIN,
+                Role.MANAGER,
+                Role.MEMBER,
+                Role.VIEWER,
+            ],
+        )
+        sprint = self.get_queryset()
+
+        serializer = self.get_serializer(sprint, many=True)
+
+        return Response({"data": serializer.data}, status=status.HTTP_200_OK)
+
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        sprint = SprintService.create(
+            user=request.user,
+            workspace_id=self.kwargs.get("workspace_id"),
+            project_id=self.kwargs.get("project_id"),
+            data=serializer.validated_data,
+        )
+        return Response(
+            {
+                "message": "The sprint was created successfully.",
+                "id": sprint.id,
+            },
+            status=status.HTTP_201_CREATED,
+        )
+
+    def retrieve(self, request, *args, **kwargs):
+        sprint = get_object_or_404(
+            Sprint,
+            id=kwargs["sprint_id"],
+            project=kwargs["project_id"],
+            project__workspace_id=kwargs["workspace_id"],
+        )
+        has_workspace_role(
+            user=request.user,
+            workspace=sprint.project.workspace,
+            allowed_roles=[
+                Role.ADMIN,
+                Role.MANAGER,
+                Role.MEMBER,
+                Role.VIEWER,
+            ],
+        )
+        serializer = self.get_serializer(sprint)
+
+        return Response({"data": serializer.data}, status=status.HTTP_200_OK)
+
+    def update(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data, partial=True)
+        serializer.is_valid(raise_exception=True)
+        sprint = SprintService.update(
+            user=request.user,
+            workspace_id=self.kwargs.get("workspace_id"),
+            project_id=self.kwargs.get("project_id"),
+            sprint_id=self.kwargs.get("sprint_id"),
+            data=serializer.validated_data,
+        )
+        return Response(
+            {
+                "message": "The sprint was updated successfully.",
+                "id": sprint.id,
+            },
+            status=status.HTTP_200_OK,
+        )
+
+    def destroy(self, request, *args, **kwargs):
+        sprint = SprintService.destroy(
+            user=request.user,
+            workspace_id=self.kwargs.get("workspace_id"),
+            project_id=self.kwargs.get("project_id"),
+            sprint_id=self.kwargs.get("sprint_id"),
         )
 
         return Response(status=status.HTTP_204_NO_CONTENT)

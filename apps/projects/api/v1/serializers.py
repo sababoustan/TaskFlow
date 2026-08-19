@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from ...models import Project, Status, Workflow, WorkflowStatus
+from ...models import Project, Status, Workflow, WorkflowStatus, Sprint
 
 
 class StatusSerializer(serializers.ModelSerializer):
@@ -64,7 +64,13 @@ class ProjectCreateSerializer(serializers.ModelSerializer):
 class ProjectUpdateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Project
-        fields = ["name", "description", "start_date", "end_date", "is_archived"]
+        fields = [
+            "name",
+            "description",
+            "start_date",
+            "end_date",
+            "is_archived"
+            ]
 
 
 class WorkflowStatusListSerializer(serializers.ModelSerializer):
@@ -88,3 +94,51 @@ class WorkflowStatusUpdateSerializer(serializers.ModelSerializer):
     class Meta:
         model = WorkflowStatus
         fields = ["order"]
+
+
+class SprintListSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Sprint
+        fields = ["name", "start_date", "end_date", "goal"]
+
+
+class SprintCreateSerializer(serializers.ModelSerializer):
+    name = serializers.CharField(max_length=255)
+    start_date = serializers.DateTimeField(
+        required=False,
+        allow_null=True
+    )
+    end_date = serializers.DateTimeField(
+        required=False,
+        allow_null=True
+    )
+    goal = serializers.CharField(
+        max_length=500,
+        required=False,
+        allow_blank=True
+    )
+
+    class Meta:
+        model = Sprint
+        fields = ["name", "start_date", "end_date", "goal"]
+
+
+class SprintUpdateSerializer(serializers.ModelSerializer):
+    name = serializers.CharField(max_length=255)
+    start_date = serializers.DateTimeField(
+        required=False,
+        allow_null=True
+    )
+    end_date = serializers.DateTimeField(
+        required=False,
+        allow_null=True
+    )
+    goal = serializers.CharField(
+        max_length=500,
+        required=False,
+        allow_blank=True
+    )
+
+    class Meta:
+        model = Sprint
+        fields = ["name", "start_date", "end_date", "goal"]
