@@ -74,3 +74,22 @@ class WorkflowStatus(models.Model):
 
     def __str__(self):
         return f"{self.workflow.name} - {self.status.name}"
+
+
+class Sprint(models.Model):
+    project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name="sprints")
+    name = models.CharField(max_length=255)
+    start_date = models.DateTimeField(null=True, blank=True)
+    end_date = models.DateTimeField(null=True, blank=True)
+    goal = models.CharField(max_length=500, blank=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["project", "name"],
+                name="unique_sprint_per_project"
+            )
+        ]
+
+    def __str__(self):
+        return f"{self.project} - {self.name}"

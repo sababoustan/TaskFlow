@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import Project, Status, Workflow, WorkflowStatus
+from .models import Project, Status, Workflow, WorkflowStatus, Sprint
 
 
 # Register your models here.
@@ -48,3 +48,11 @@ class WorkflowStatusAdmin(admin.ModelAdmin):
     list_display = ("id", "workflow", "status", "order")
     list_filter = ("workflow", "status")
     search_fields = ("workflow__name", "status__name")
+
+
+@admin.register(Sprint)
+class SprintAdmin(admin.ModelAdmin):
+    list_display = ("id", "project", "name", "start_date", "end_date", "goal")
+    list_filter = ("project",)
+    search_fields = ("project__name", "name")
+    autocomplete_fields = ("project",)
