@@ -1,7 +1,7 @@
 import pytest
 from django.db import IntegrityError
 
-from apps.projects.models import Project, Status, Workflow, WorkflowStatus
+from apps.projects.models import Project, Status, Workflow, WorkflowStatus, Sprint
 
 
 @pytest.mark.django_db
@@ -63,3 +63,21 @@ def test_create_workflow_status(workflow, status_obj):
     assert workflow_status.workflow == workflow
     assert workflow_status.status == status_obj
     assert workflow_status.order == 1
+
+
+@pytest.mark.django_db
+def test_create_sprint(project):
+    sprint = Sprint.objects.create(
+        project=project,
+        name="sprint 1",
+        start_date="2026-08-19T08:03:25.955Z",
+        end_date="2026-09-19T08:03:25.955Z",
+        goal="Complete authentication and project management features."
+    )
+
+    assert sprint.id is not None
+    assert sprint.project == project
+    assert sprint.name == "sprint 1"
+    assert sprint.start_date == "2026-08-19T08:03:25.955Z"
+    assert sprint.end_date == "2026-09-19T08:03:25.955Z"
+    assert sprint.goal == "Complete authentication and project management features."

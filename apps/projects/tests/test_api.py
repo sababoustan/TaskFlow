@@ -1,7 +1,6 @@
 import pytest
 from rest_framework import status
-
-from apps.projects.models import Project, Status, Workflow, WorkflowStatus
+from apps.projects.models import Project, Status, Workflow, WorkflowStatus, Sprint
 
 STATUS_URL = "/api/v1/projects/statuses/"
 
@@ -876,6 +875,340 @@ class TestWorkflowStatusAPI:
     ):
         url = WORKFLOW_STATUS_DETAIL_URL.format(99999)
 
+        response = authenticated_client.delete(url)
+
+        assert response.status_code == status.HTTP_404_NOT_FOUND
+
+
+SPRINT_URL = "/api/v1/projects/workspaces/{}/projects/{}/sprints/"
+SPRINT_DETAIL_URL = "/api/v1/projects/workspaces/{}/projects/{}/sprints/{}/"
+
+
+@pytest.mark.django_db
+class TestSprintAPI:
+    def test_list_sprint_requires_authentication(
+        self,
+        api_client,
+        workspace,
+        project
+    ):
+        url = SPRINT_URL.format(workspace.id, project.id)
+
+        response = api_client.get(url)
+
+        assert response.status_code == status.HTTP_401_UNAUTHORIZED
+
+    def test_member_can_list_sprint(
+        self,
+        api_client,
+        another_user,
+        workspace,
+        project,
+        workspace_member,
+    ):
+        api_client.force_authenticate(user=another_user)
+
+        url = SPRINT_URL.format(workspace.id, project.id)
+
+        response = api_client.get(url)
+
+        assert response.status_code == status.HTTP_200_OK
+        assert len(response.data["data"]) == 0
+
+    def test_owner_can_list_sprint(
+        self,
+        authenticated_client,
+        workspace,
+        project,
+    ):
+        url = SPRINT_URL.format(workspace.id, project.id)
+
+        response = authenticated_client.get(url)
+
+        assert response.status_code == status.HTTP_200_OK
+
+    def test_user_cannot_list_another_workspace_sprint(
+        self,
+        authenticated_client,
+        another_workspace,
+        another_project,
+    ):
+        url = SPRINT_URL.format(another_workspace.id, another_project.id)
+
+        response = authenticated_client.get(url)
+
+        assert response.status_code == status.HTTP_403_FORBIDDEN
+        assert response.data["detail"] == (
+            "You do not have permission to perform this action."
+        )
+
+    def test_admin_can_create_sprint(
+        self,
+        api_client,
+        another_user,
+        workspace,
+        project,
+        workspace_admin,
+    ):
+        api_client.force_authenticate(user=another_user)
+
+        url = SPRINT_URL.format(workspace.id, project.id)
+
+        response = api_client.post(
+            url,
+            {
+                "name": "sprint 1",
+                "start_date": "2026-08-19T08:03:25.955Z",
+                "end_date": "2026-09-19T08:03:25.955Z",
+                "goal": "Complete authentication and project management features.",
+            },
+            format="json",
+        )
+        sprint = Sprint.objects.get(
+            project=project,
+            name="sprint 1",
+        )
+        
+        assert response.status_code == status.HTTP_201_CREATED
+        assert sprint.start_date is not None
+        assert sprint.end_date is not None
+        assert sprint.goal == (
+            "Complete authentication and project management features."
+        )
+
+        re_creation = api_client.post(
+            url,
+            {
+                "name": "sprint 1",
+                "start_date": "2026-09-19T08:03:25.955Z",
+                "end_date": "2026-10-19T08:03:25.955Z",
+                "goal": "Complete authentication features.",
+            },
+            format="json",
+        )
+
+        assert re_creation.status_code == status.HTTP_400_BAD_REQUEST
+        assert re_creation.data["name"] == (
+            "A sprint with this name already exists in this project."
+        )
+
+    def test_manager_can_create_sprint(
+        self,
+        api_client,
+        another_user,
+        workspace,
+        project,
+        workspace_manager,
+    ):
+        api_client.force_authenticate(user=another_user)
+
+        url = SPRINT_URL.format(workspace.id, project.id)
+
+        response = api_client.post(
+            url,
+            {
+                "name": "sprint 1",
+                "start_date": "2026-08-19T08:03:25.955Z",
+                "end_date": "2026-09-19T08:03:25.955Z",
+                "goal": "Complete authentication and project management features.",
+            },
+            format="json",
+        )
+        sprint = Sprint.objects.get(
+            project=project,
+            name="sprint 1",
+        )
+
+        assert response.status_code == status.HTTP_201_CREATED
+        assert sprint.start_date is not None
+        assert sprint.end_date is not None
+        assert sprint.goal == (
+            "Complete authentication and project management features."
+        )
+
+
+    def test_member_cannot_create_sprint(
+        self,
+        api_client,
+        another_user,
+        workspace,
+        project,
+    ):
+        api_client.force_authenticate(user=another_user)
+
+        url = SPRINT_URL.format(workspace.id, project.id)
+
+        response = api_client.post(
+            url,
+            {
+                "name": "sprint 1",
+                "start_date": "2026-08-19T08:03:25.955Z",
+                "end_date": "2026-09-19T08:03:25.955Z",
+                "goal": "Complete authentication and project management features.",
+            },
+            format="json",
+        )
+
+        assert response.status_code == status.HTTP_403_FORBIDDEN
+        assert response.data["detail"] == (
+            "You do not have permission to perform this action."
+        )
+
+    def test_owner_can_create_sprint(
+        self,
+        authenticated_client,
+        workspace,
+        project,
+    ):
+        url = SPRINT_URL.format(workspace.id, project.id)
+
+        response = authenticated_client.post(
+            url,
+            {
+                "name": "sprint 1",
+                "start_date": "2026-08-19T08:03:25.955Z",
+                "end_date": "2026-09-19T08:03:25.955Z",
+                "goal": "Complete authentication and project management features.",
+            },
+            format="json",
+        )
+
+        assert response.status_code == status.HTTP_201_CREATED
+
+    def test_update_sprint(
+        self,
+        api_client,
+        another_user,
+        workspace_admin,
+        workspace,
+        project,
+        sprint
+    ):
+        api_client.force_authenticate(user=another_user)
+
+        url = SPRINT_DETAIL_URL.format(workspace.id, project.id, sprint.id)
+
+        response = api_client.patch(
+            url,
+            {"name": "sprint2"},
+            format="json",
+        )
+
+        assert response.status_code == status.HTTP_200_OK
+
+        sprint.refresh_from_db()
+
+        assert sprint.name == "sprint2"
+
+    def test_member_cannot_update_sprint(
+        self,
+        api_client,
+        another_user,
+        workspace_member,
+        workspace,
+        project,
+        sprint
+    ):
+        api_client.force_authenticate(user=another_user)
+
+        url = SPRINT_DETAIL_URL.format(workspace.id, project.id, sprint.id)
+
+        response = api_client.patch(
+            url,
+            {"name": "sprint2"},
+            format="json",
+        )
+
+        assert response.status_code == status.HTTP_403_FORBIDDEN
+        assert response.data["detail"] == (
+            "You do not have permission to perform this action."
+        )
+
+        sprint.refresh_from_db()
+
+        assert sprint.name == "sprint 1"
+
+    def test_manager_can_update_sprint(
+        self,
+        api_client,
+        another_user,
+        workspace_manager,
+        workspace,
+        project,
+        sprint
+    ):
+        api_client.force_authenticate(user=another_user)
+
+        url = SPRINT_DETAIL_URL.format(workspace.id, project.id, sprint.id)
+
+        response = api_client.patch(
+            url,
+            {"name": "sprint2"},
+            format="json",
+        )
+
+        assert response.status_code == status.HTTP_200_OK
+
+        sprint.refresh_from_db()
+        
+        assert sprint.name == "sprint2"
+
+    def test_delete_sprint(
+        self,
+        authenticated_client,
+        workspace,
+        project,
+        sprint
+    ):
+        url = SPRINT_DETAIL_URL.format(workspace.id, project.id, sprint.id)
+
+        response = authenticated_client.delete(url)
+
+        assert response.status_code == status.HTTP_204_NO_CONTENT
+
+        assert not Sprint.objects.filter(id=sprint.id).exists()
+
+    def test_member_cannot_delete_sprint(
+        self,
+        api_client,
+        another_user,
+        workspace,
+        project,
+        sprint,
+        workspace_member,
+    ):
+        api_client.force_authenticate(user=another_user)
+
+        url = SPRINT_DETAIL_URL.format(workspace.id, project.id, sprint.id)
+
+        response = api_client.delete(url)
+
+        assert response.status_code == status.HTTP_403_FORBIDDEN
+        assert response.data["detail"] == (
+            "You do not have permission to perform this action."
+        )
+
+        assert Sprint.objects.filter(id=sprint.id).exists()
+
+    def test_delete_nonexistent_sprint(
+        self,
+        authenticated_client,
+        workspace,
+        project,
+    ):
+        nonexistent_sprint_id = Sprint.objects.all().order_by("-id").first()
+
+        sprint_id = (
+            nonexistent_sprint_id.id + 1
+            if nonexistent_sprint_id
+            else 1
+        )
+
+        url = SPRINT_DETAIL_URL.format(
+            workspace.id,
+            project.id,
+            sprint_id,
+        )
         response = authenticated_client.delete(url)
 
         assert response.status_code == status.HTTP_404_NOT_FOUND

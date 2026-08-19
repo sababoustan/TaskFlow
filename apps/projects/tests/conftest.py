@@ -2,7 +2,7 @@ import pytest
 from django.contrib.auth import get_user_model
 from rest_framework.test import APIClient
 
-from apps.projects.models import Project, Status, Workflow, WorkflowStatus
+from apps.projects.models import Project, Status, Workflow, WorkflowStatus, Sprint
 from apps.workspaces.models import Membership, Role, Workspace
 
 
@@ -121,6 +121,16 @@ def project(db, workspace, workflow):
 
 
 @pytest.fixture
+def another_project(db, another_user, another_workspace, workflow_another):
+    return Project.objects.create(
+        workspace=another_workspace,
+        workflow=workflow_another,
+        name="Backend",
+        description="Form login.",
+    )
+
+
+@pytest.fixture
 def workflow_status(db, workflow, status_obj):
     return WorkflowStatus.objects.create(workflow=workflow, status=status_obj, order=1)
 
@@ -129,4 +139,15 @@ def workflow_status(db, workflow, status_obj):
 def workflow_status_another(db, workflow_another, status_obj):
     return WorkflowStatus.objects.create(
         workflow=workflow_another, status=status_obj, order=1
+    )
+
+
+@pytest.fixture
+def sprint(db, project):
+    return Sprint.objects.create(
+        project=project,
+        name="sprint 1",
+        start_date="2026-08-19",
+        end_date="2026-09-19",
+        goal="Complete authentication and project management features."
     )
