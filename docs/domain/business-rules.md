@@ -22,6 +22,7 @@
 - Accepting an invitation automatically creates a membership.
 - Only the invited user can accept or reject an invitation.
 - Only the workspace owner or an admin can cancel a pending invitation.
+- Only the workspace owner can update workspace information.
 - Invitations can only be accepted, rejected, or cancelled while their status is `PENDING`.
 
 ## Membership

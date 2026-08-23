@@ -19,15 +19,20 @@ The system supports the following roles:
 
 # Workspace
 
-| Permission | Owner | Admin | Manager | Member | Viewer |
-|-----------|:-----:|:-----:|:-------:|:------:|:------:|
-| View Workspace | ✅ | ✅ | ✅ | ✅ | ✅ |
-| Create Workspace | ✅ | ✅ | ✅ | ✅ | ✅ |
-| Update Workspace | ✅ | ✅ | ❌ | ❌ | ❌ |
-| Delete Workspace | ✅ | ❌ | ❌ | ❌ | ❌ |
-| List Invitations | ✅ | ✅ | ❌ | ❌ | ❌ |
-| Invite Users | ✅ | ✅ | ❌ | ❌ | ❌ |
-| Cancel Invitation | ✅ | ✅ | ❌ | ❌ | ❌ |
+| Permission         | Owner | Admin | Manager | Member | Viewer |
+| ------------------ | :---: | :---: | :-----: | :----: | :----: |
+| View Workspace     |   ✅   |   ✅   |    ✅    |    ✅   |    ✅   |
+| Create Workspace   |   ✅   |   ✅   |    ✅    |    ✅   |    ✅   |
+| Update Workspace   |   ✅   |   ❌   |    ❌    |    ❌   |    ❌   |
+| Delete Workspace   |   ✅   |   ❌   |    ❌    |    ❌   |    ❌   |
+| List Invitations   |   ✅   |   ✅   |    ❌    |    ❌   |    ❌   |
+| Invite Users       |   ✅   |   ✅   |    ❌    |    ❌   |    ❌   |
+| Cancel Invitation  |   ✅   |   ✅   |    ❌    |    ❌   |    ❌   |
+| List Members       |   ✅   |   ✅   |    ❌    |    ❌   |    ❌   |
+| View Member        |   ✅   |   ✅   |    ❌    |    ❌   |    ❌   |
+| Update Member Role |   ✅   |   ✅   |    ❌    |    ❌   |    ❌   |
+| Remove Member      |   ✅   |   ✅   |    ❌    |    ❌   |    ❌   |
+
 
 ---
 
