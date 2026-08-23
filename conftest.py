@@ -25,6 +25,22 @@ def user(db):
         is_verified=True,
     )
 
+
+@pytest.fixture
+def unrelated_user(db):
+    return User.objects.create_user(
+        email="unrelated@gmail.com",
+        password="StrongPassword123",
+        is_verified=True,
+    )
+
+
+@pytest.fixture
+def authenticated_client(api_client, user):
+    api_client.force_authenticate(user=user)
+    return api_client
+
+
 @pytest.fixture
 def another_user(db):
     User = get_user_model()
@@ -42,4 +58,12 @@ def workspace(user):
     return Workspace.objects.create(
         owner=user,
         title="python",
+    )
+
+
+@pytest.fixture
+def another_workspace(db, another_user):
+    return Workspace.objects.create(
+        owner=another_user,
+        title="Another Workspace",
     )

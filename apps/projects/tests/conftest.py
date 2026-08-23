@@ -21,14 +21,6 @@ def admin_user(db):
 
 
 @pytest.fixture
-def another_workspace(db, another_user):
-    return Workspace.objects.create(
-        owner=another_user,
-        title="Another Workspace",
-    )
-
-
-@pytest.fixture
 def workspace_member(db, another_user, workspace):
     return Membership.objects.create(
         user=another_user,

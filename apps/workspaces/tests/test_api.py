@@ -1,345 +1,629 @@
 import pytest
+from rest_framework import status
 
 from apps.workspaces.choices import (
     InvitationStatus,
     Role,
 )
-from apps.workspaces.models import Membership, WorkspaceInvitation
+from apps.workspaces.models import Membership, WorkspaceInvitation, Workspace
+
+
+WORKSPACE_URL = "/api/v1/workspaces/"
+WORKSPACE_DETAIL_URL = "/api/v1/workspaces/{}/"
 
 
 @pytest.mark.django_db
-def test_create_invitation(
-    client,
-    user,
-    workspace,
-    invited_user,
-):
-    login_response = client.post(
-        "/api/v1/auth/login/",
-        {
-            "email": user.email,
-            "password": "StrongPassword123",
-        },
-        format="json",
-    )
+class TestWorkspaceAPI:
 
-    assert login_response.status_code == 200
-    access = login_response.data["access"]
+    def test_list_workspaces_requires_authentication(
+        self,
+        api_client,
+    ):
+        response = api_client.get(WORKSPACE_URL)
 
-    client.credentials(HTTP_AUTHORIZATION=f"Bearer {access}")
+        assert response.status_code == status.HTTP_401_UNAUTHORIZED
 
-    response = client.post(
-        f"/api/v1/workspaces/{workspace.id}/invitations/",
-        {
-            "email": invited_user.email,
-            "role": Role.MEMBER,
-        },
-        format="json",
-    )
+    def test_user_can_list_owned_workspaces(
+        self,
+        authenticated_client,
+        workspace,
+    ):
+        response = authenticated_client.get(WORKSPACE_URL)
 
-    assert response.status_code == 201
-    assert response.data["messages"] == "The user was successfully invited."
+        assert response.status_code == status.HTTP_200_OK
+        assert len(response.data) == 1
+        assert response.data[0]["id"] == workspace.id
+        assert response.data[0]["title"] == workspace.title
 
-    invitation = WorkspaceInvitation.objects.get(
-        workspace=workspace,
-        user=invited_user,
-    )
+    def test_member_can_list_workspace(
+        self,
+        api_client,
+        invited_user,
+        workspace,
+        membership,
+    ):
+        api_client.force_authenticate(user=invited_user)
 
-    assert invitation.invited_by == user
-    assert invitation.workspace == workspace
-    assert invitation.user == invited_user
-    assert invitation.role == Role.MEMBER
-    assert invitation.status == InvitationStatus.PENDING
+        response = api_client.get(WORKSPACE_URL)
 
+        assert response.status_code == status.HTTP_200_OK
+        assert len(response.data) == 1
+        assert response.data[0]["id"] == workspace.id
 
-@pytest.mark.django_db
-def test_list_invitations(
-    client,
-    user,
-    workspace,
-    workspace_invitation,
-):
-    login_response = client.post(
-        "/api/v1/auth/login/",
-        {
-            "email": user.email,
-            "password": "StrongPassword123",
-        },
-        format="json",
-    )
+    def test_user_cannot_list_workspace_they_are_not_member_of(
+        self,
+        api_client,
+        unrelated_user,
+        another_workspace,
+    ):
+        api_client.force_authenticate(user=unrelated_user)
 
-    assert login_response.status_code == 200
-    access = login_response.data["access"]
+        response = api_client.get(WORKSPACE_URL)
 
-    client.credentials(HTTP_AUTHORIZATION=f"Bearer {access}")
+        assert response.status_code == status.HTTP_200_OK
+        assert len(response.data) == 0
 
-    response = client.get(
-        f"/api/v1/workspaces/{workspace.id}/invitations/",
-    )
+    def test_user_can_create_workspace(
+        self,
+        authenticated_client,
+        user,
+    ):
+        response = authenticated_client.post(
+            WORKSPACE_URL,
+            {
+                "title": "Django Project",
+            },
+            format="json",
+        )
 
-    assert response.status_code == 200
+        assert response.status_code == status.HTTP_201_CREATED
 
-    invitation = response.data["data"][0]
+        workspace = Workspace.objects.get(
+            title="Django Project",
+        )
 
-    assert invitation["id"] == workspace_invitation.id
-    assert invitation["email"] == workspace_invitation.user.email
-    assert invitation["invited_by"] == workspace_invitation.invited_by.email
-    assert invitation["role"] == workspace_invitation.role
+        assert workspace.owner == user
+        assert workspace.title == "Django Project"
+        assert workspace.slug == "django-project"
 
+    def test_user_can_retrieve_owned_workspace(
+        self,
+        authenticated_client,
+        workspace,
+    ):
+        url = WORKSPACE_DETAIL_URL.format(workspace.id)
 
-@pytest.mark.django_db
-def test_accept_invitation(
-    client,
-    workspace,
-    invited_user,
-    workspace_invitation,
-):
-    login_response = client.post(
-        "/api/v1/auth/login/",
-        {
-            "email": invited_user.email,
-            "password": "StrongPassword123",
-        },
-        format="json",
-    )
+        response = authenticated_client.get(url)
 
-    assert login_response.status_code == 200
-    access = login_response.data["access"]
+        assert response.status_code == status.HTTP_200_OK
+        assert response.data["id"] == workspace.id
+        assert response.data["title"] == workspace.title
 
-    client.credentials(HTTP_AUTHORIZATION=f"Bearer {access}")
+    def test_member_can_retrieve_workspace(
+        self,
+        api_client,
+        invited_user,
+        workspace,
+        membership,
+    ):
+        api_client.force_authenticate(user=invited_user)
 
-    assert not Membership.objects.filter(
-        workspace=workspace,
-        user=invited_user,
-    ).exists()
+        url = WORKSPACE_DETAIL_URL.format(workspace.id)
 
-    response = client.post(
-        f"/api/v1/workspaces/invitations/{workspace_invitation.id}/accept/",
-    )
+        response = api_client.get(url)
 
-    assert response.status_code == 201
-    assert response.data["message"] == "Invitation accepted successfully."
+        assert response.status_code == status.HTTP_200_OK
+        assert response.data["id"] == workspace.id
 
-    membership = Membership.objects.get(
-        workspace=workspace,
-        user=invited_user,
-    )
+    def test_user_cannot_retrieve_unaccessible_workspace(
+        self,
+        api_client,
+        unrelated_user,
+        another_workspace,
+    ):
+        api_client.force_authenticate(user=unrelated_user)
 
-    assert membership.workspace == workspace
-    assert membership.user == invited_user
-    assert membership.role == Role.MEMBER
+        url = WORKSPACE_DETAIL_URL.format(another_workspace.id)
 
-    workspace_invitation.refresh_from_db()
+        response = api_client.get(url)
 
-    assert workspace_invitation.status == InvitationStatus.ACCEPTED
+        assert response.status_code == status.HTTP_404_NOT_FOUND
 
+    def test_owner_can_update_workspace(
+        self,
+        authenticated_client,
+        workspace,
+    ):
+        url = WORKSPACE_DETAIL_URL.format(workspace.id)
 
-@pytest.mark.django_db
-def test_reject_invitation(
-    client,
-    invited_user,
-    workspace_invitation,
-):
-    login_response = client.post(
-        "/api/v1/auth/login/",
-        {
-            "email": invited_user.email,
-            "password": "StrongPassword123",
-        },
-        format="json",
-    )
+        response = authenticated_client.patch(
+            url,
+            {
+                "title": "Updated Workspace",
+            },
+            format="json",
+        )
 
-    assert login_response.status_code == 200
-    access = login_response.data["access"]
+        assert response.status_code == status.HTTP_200_OK
 
-    client.credentials(HTTP_AUTHORIZATION=f"Bearer {access}")
-    response = client.post(
-        f"/api/v1/workspaces/invitations/{workspace_invitation.id}/reject/",
-    )
+        workspace.refresh_from_db()
 
-    assert response.status_code == 200
-    assert response.data["message"] == "Invitation rejected successfully."
-    assert response.data["workspace"] == workspace_invitation.workspace.id
-    assert response.data["status"] == InvitationStatus.REJECTED
+        assert workspace.title == "Updated Workspace"
 
-    workspace_invitation.refresh_from_db()
+    def test_member_cannot_update_workspace(
+        self,
+        api_client,
+        invited_user,
+        workspace,
+        membership,
+    ):
+        api_client.force_authenticate(user=invited_user)
 
-    assert workspace_invitation.status == InvitationStatus.REJECTED
+        url = WORKSPACE_DETAIL_URL.format(workspace.id)
 
+        response = api_client.patch(
+            url,
+            {
+                "title": "Hacked Workspace",
+            },
+            format="json",
+        )
 
-@pytest.mark.django_db
-def test_cancel_invitation(
-    client,
-    user,
-    workspace_invitation,
-):
-    login_response = client.post(
-        "/api/v1/auth/login/",
-        {
-            "email": user.email,
-            "password": "StrongPassword123",
-        },
-        format="json",
-    )
+        assert response.status_code == status.HTTP_403_FORBIDDEN
 
-    assert login_response.status_code == 200
-    access = login_response.data["access"]
+        workspace.refresh_from_db()
 
-    client.credentials(HTTP_AUTHORIZATION=f"Bearer {access}")
-    response = client.post(
-        f"/api/v1/workspaces/invitations/{workspace_invitation.id}/cancel/",
-    )
+        assert workspace.title != "Hacked Workspace"
 
-    assert response.status_code == 200
-    assert response.data["message"] == "Invitation cancelled successfully."
-    assert response.data["workspace"] == workspace_invitation.workspace.id
-    assert response.data["status"] == InvitationStatus.CANCELLED
+    def test_owner_can_delete_workspace(
+        self,
+        authenticated_client,
+        workspace,
+    ):
+        url = WORKSPACE_DETAIL_URL.format(workspace.id)
 
-    workspace_invitation.refresh_from_db()
+        response = authenticated_client.delete(url)
 
-    assert workspace_invitation.status == InvitationStatus.CANCELLED
+        assert response.status_code == status.HTTP_204_NO_CONTENT
+        assert not Workspace.objects.filter(id=workspace.id).exists()
 
+    def test_member_cannot_delete_workspace(
+        self,
+        api_client,
+        invited_user,
+        workspace,
+        membership,
+    ):
+        api_client.force_authenticate(user=invited_user)
 
-@pytest.mark.django_db
-def test_get_workspace_member(
-    client,
-    user,
-    workspace,
-    membership,
-):
-    login_response = client.post(
-        "/api/v1/auth/login/",
-        {
-            "email": user.email,
-            "password": "StrongPassword123",
-        },
-        format="json",
-    )
+        url = WORKSPACE_DETAIL_URL.format(workspace.id)
 
-    assert login_response.status_code == 200
-    access = login_response.data["access"]
+        response = api_client.delete(url)
 
-    client.credentials(HTTP_AUTHORIZATION=f"Bearer {access}")
-    response = client.get(
-        f"/api/v1/workspaces/{workspace.id}/members/{membership.id}/",
-    )
+        assert response.status_code == status.HTTP_403_FORBIDDEN
+        assert Workspace.objects.filter(id=workspace.id).exists()
+        
 
-    assert response.status_code == 200
-    data = response.data["data"]
-    assert data["id"] == membership.id
-    assert data["email"] == membership.user.email
-    assert data["role"] == membership.role
-
+INVITATION_URL = "/api/v1/workspaces/{}/invitations/"
+ACCEPT_INVITATION_URL = "/api/v1/workspaces/invitations/{}/accept/"
+REJECT_INVITATION_URL = "/api/v1/workspaces/invitations/{}/reject/"
+CANCEL_INVITATION_URL = "/api/v1/workspaces/invitations/{}/cancel/"
 
 @pytest.mark.django_db
-def test_list_membership(
-    client,
-    user,
-    workspace,
-    membership,
-):
-    login_response = client.post(
-        "/api/v1/auth/login/",
-        {
-            "email": user.email,
-            "password": "StrongPassword123",
-        },
-        format="json",
-    )
+class TestInvitationAPI:
 
-    assert login_response.status_code == 200
-    access = login_response.data["access"]
+    def test_create_invitation(
+        self,
+        client,
+        user,
+        workspace,
+        invited_user,
+    ):
+        login_response = client.post(
+            "/api/v1/auth/login/",
+            {
+                "email": user.email,
+                "password": "StrongPassword123",
+            },
+            format="json",
+        )
 
-    client.credentials(HTTP_AUTHORIZATION=f"Bearer {access}")
-    response = client.get(
-        f"/api/v1/workspaces/{workspace.id}/members/",
-    )
+        assert login_response.status_code == 200
 
-    assert response.status_code == 200
+        access = login_response.data["access"]
+        client.credentials(
+            HTTP_AUTHORIZATION=f"Bearer {access}"
+        )
 
-    data = response.data["data"]
+        url = INVITATION_URL.format(workspace.id)
 
-    assert len(data) == 1
+        response = client.post(
+            url,
+            {
+                "email": invited_user.email,
+                "role": Role.MEMBER,
+            },
+            format="json",
+        )
 
-    member = data[0]
+        assert response.status_code == 201
+        assert response.data["messages"] == (
+            "The user was successfully invited."
+        )
 
-    assert member["id"] == membership.id
-    assert member["email"] == membership.user.email
-    assert member["role"] == membership.role
+        invitation = WorkspaceInvitation.objects.get(
+            workspace=workspace,
+            user=invited_user,
+        )
 
+        assert invitation.invited_by == user
+        assert invitation.workspace == workspace
+        assert invitation.user == invited_user
+        assert invitation.role == Role.MEMBER
+        assert invitation.status == InvitationStatus.PENDING
+
+    def test_list_invitations(
+        self,
+        client,
+        user,
+        workspace,
+        workspace_invitation,
+    ):
+        login_response = client.post(
+            "/api/v1/auth/login/",
+            {
+                "email": user.email,
+                "password": "StrongPassword123",
+            },
+            format="json",
+        )
+
+        assert login_response.status_code == 200
+
+        access = login_response.data["access"]
+        client.credentials(
+            HTTP_AUTHORIZATION=f"Bearer {access}"
+        )
+
+        url = INVITATION_URL.format(workspace.id)
+
+        response = client.get(url)
+
+        assert response.status_code == 200
+
+        invitation = response.data["data"][0]
+
+        assert invitation["id"] == workspace_invitation.id
+        assert invitation["email"] == workspace_invitation.user.email
+        assert invitation["invited_by"] == (
+            workspace_invitation.invited_by.email
+        )
+        assert invitation["role"] == workspace_invitation.role
+        assert invitation["status"] == workspace_invitation.status
+
+    def test_accept_invitation(
+        self,
+        client,
+        workspace,
+        invited_user,
+        workspace_invitation,
+    ):
+        login_response = client.post(
+            "/api/v1/auth/login/",
+            {
+                "email": invited_user.email,
+                "password": "StrongPassword123",
+            },
+            format="json",
+        )
+
+        assert login_response.status_code == 200
+
+        access = login_response.data["access"]
+        client.credentials(
+            HTTP_AUTHORIZATION=f"Bearer {access}"
+        )
+
+        assert not Membership.objects.filter(
+            workspace=workspace,
+            user=invited_user,
+        ).exists()
+
+        url = ACCEPT_INVITATION_URL.format(
+            workspace_invitation.id
+        )
+
+        response = client.post(url)
+
+        assert response.status_code == 201
+        assert response.data["message"] == (
+            "Invitation accepted successfully."
+        )
+        assert response.data["workspace"] == workspace.id
+
+        membership = Membership.objects.get(
+            workspace=workspace,
+            user=invited_user,
+        )
+
+        assert membership.workspace == workspace
+        assert membership.user == invited_user
+        assert membership.role == Role.MEMBER
+
+        workspace_invitation.refresh_from_db()
+
+        assert workspace_invitation.status == (
+            InvitationStatus.ACCEPTED
+        )
+
+    def test_reject_invitation(
+        self,
+        client,
+        invited_user,
+        workspace_invitation,
+    ):
+        login_response = client.post(
+            "/api/v1/auth/login/",
+            {
+                "email": invited_user.email,
+                "password": "StrongPassword123",
+            },
+            format="json",
+        )
+
+        assert login_response.status_code == 200
+
+        access = login_response.data["access"]
+        client.credentials(
+            HTTP_AUTHORIZATION=f"Bearer {access}"
+        )
+
+        url = REJECT_INVITATION_URL.format(
+            workspace_invitation.id
+        )
+
+        response = client.post(url)
+
+        assert response.status_code == 200
+        assert response.data["message"] == (
+            "Invitation rejected successfully."
+        )
+        assert response.data["workspace"] == (
+            workspace_invitation.workspace.id
+        )
+        assert response.data["status"] == (
+            InvitationStatus.REJECTED
+        )
+
+        workspace_invitation.refresh_from_db()
+
+        assert workspace_invitation.status == (
+            InvitationStatus.REJECTED
+        )
+
+    def test_cancel_invitation(
+        self,
+        client,
+        user,
+        workspace_invitation,
+    ):
+        login_response = client.post(
+            "/api/v1/auth/login/",
+            {
+                "email": user.email,
+                "password": "StrongPassword123",
+            },
+            format="json",
+        )
+
+        assert login_response.status_code == 200
+
+        access = login_response.data["access"]
+        client.credentials(
+            HTTP_AUTHORIZATION=f"Bearer {access}"
+        )
+
+        url = CANCEL_INVITATION_URL.format(
+            workspace_invitation.id
+        )
+
+        response = client.post(url)
+
+        assert response.status_code == 200
+        assert response.data["message"] == (
+            "Invitation cancelled successfully."
+        )
+        assert response.data["workspace"] == (
+            workspace_invitation.workspace.id
+        )
+        assert response.data["status"] == (
+            InvitationStatus.CANCELLED
+        )
+
+        workspace_invitation.refresh_from_db()
+
+        assert workspace_invitation.status == (
+            InvitationStatus.CANCELLED
+        )
+
+
+MEMBERSHIP_URL = "/api/v1/workspaces/{}/members/"
+MEMBERSHIP_DETAIL_URL = "/api/v1/workspaces/{}/members/{}/"
+MEMBERSHIP_ROLE_URL = "/api/v1/workspaces/{}/members/{}/role/"
 
 @pytest.mark.django_db
-def test_update_member(
-    client,
-    user,
-    workspace,
-    membership,
-):
-    login_response = client.post(
-        "/api/v1/auth/login/",
-        {
-            "email": user.email,
-            "password": "StrongPassword123",
-        },
-        format="json",
-    )
+class TestMembershipAPI:
 
-    assert login_response.status_code == 200
-    access = login_response.data["access"]
+    def test_get_workspace_member(
+        self,
+        client,
+        user,
+        workspace,
+        membership,
+    ):
+        login_response = client.post(
+            "/api/v1/auth/login/",
+            {
+                "email": user.email,
+                "password": "StrongPassword123",
+            },
+            format="json",
+        )
 
-    client.credentials(HTTP_AUTHORIZATION=f"Bearer {access}")
-    response = client.patch(
-        f"/api/v1/workspaces/{workspace.id}/members/{membership.id}/role/",
-        {
-            "role": "admin",
-        },
-        format="json",
-    )
+        assert login_response.status_code == 200
 
-    assert response.status_code == 200
-    assert response.data["message"] == "Member updated successfully."
+        access = login_response.data["access"]
+        client.credentials(
+            HTTP_AUTHORIZATION=f"Bearer {access}"
+        )
 
-    data = response.data["data"]
+        url = MEMBERSHIP_DETAIL_URL.format(
+            workspace.id,
+            membership.id,
+        )
 
-    assert data["id"] == membership.id
-    assert data["email"] == membership.user.email
-    assert data["role"] == Role.ADMIN
-    assert "joined_at" in data
+        response = client.get(url)
 
-    membership.refresh_from_db()
+        assert response.status_code == 200
 
-    assert membership.role == Role.ADMIN
+        data = response.data["data"]
 
+        assert data["id"] == membership.id
+        assert data["email"] == membership.user.email
+        assert data["role"] == membership.role
+        assert "joined_at" in data
 
-@pytest.mark.django_db
-def test_delete_member(
-    client,
-    user,
-    workspace,
-    membership,
-):
-    login_response = client.post(
-        "/api/v1/auth/login/",
-        {
-            "email": user.email,
-            "password": "StrongPassword123",
-        },
-        format="json",
-    )
+    def test_list_membership(
+        self,
+        client,
+        user,
+        workspace,
+        membership,
+    ):
+        login_response = client.post(
+            "/api/v1/auth/login/",
+            {
+                "email": user.email,
+                "password": "StrongPassword123",
+            },
+            format="json",
+        )
 
-    assert login_response.status_code == 200
-    access = login_response.data["access"]
+        assert login_response.status_code == 200
 
-    client.credentials(HTTP_AUTHORIZATION=f"Bearer {access}")
-    response = client.delete(
-        f"/api/v1/workspaces/{workspace.id}/members/{membership.id}/",
-    )
+        access = login_response.data["access"]
+        client.credentials(
+            HTTP_AUTHORIZATION=f"Bearer {access}"
+        )
 
-    assert response.status_code == 200
-    assert (
-        response.data["message"]
-        == f"{membership.user.email} successfully removed from the workspace."
-    )
-    assert response.data["workspace"] == membership.workspace.id
+        url = MEMBERSHIP_URL.format(workspace.id)
 
-    assert not Membership.objects.filter(id=membership.id).exists()
+        response = client.get(url)
+
+        assert response.status_code == 200
+
+        data = response.data["data"]
+
+        assert len(data) == 1
+
+        member = data[0]
+
+        assert member["id"] == membership.id
+        assert member["email"] == membership.user.email
+        assert member["role"] == membership.role
+        assert "joined_at" in member
+
+    def test_update_member(
+        self,
+        client,
+        user,
+        workspace,
+        membership,
+    ):
+        login_response = client.post(
+            "/api/v1/auth/login/",
+            {
+                "email": user.email,
+                "password": "StrongPassword123",
+            },
+            format="json",
+        )
+
+        assert login_response.status_code == 200
+
+        access = login_response.data["access"]
+        client.credentials(
+            HTTP_AUTHORIZATION=f"Bearer {access}"
+        )
+
+        url = MEMBERSHIP_ROLE_URL.format(
+            workspace.id,
+            membership.id,
+        )
+
+        response = client.patch(
+            url,
+            {
+                "role": Role.ADMIN,
+            },
+            format="json",
+        )
+
+        assert response.status_code == 200
+        assert response.data["message"] == (
+            "Member updated successfully."
+        )
+
+        data = response.data["data"]
+
+        assert data["id"] == membership.id
+        assert data["email"] == membership.user.email
+        assert data["role"] == Role.ADMIN
+        assert "joined_at" in data
+
+        membership.refresh_from_db()
+
+        assert membership.role == Role.ADMIN
+
+    def test_delete_member(
+        self,
+        client,
+        user,
+        workspace,
+        membership,
+    ):
+        login_response = client.post(
+            "/api/v1/auth/login/",
+            {
+                "email": user.email,
+                "password": "StrongPassword123",
+            },
+            format="json",
+        )
+
+        assert login_response.status_code == 200
+
+        access = login_response.data["access"]
+        client.credentials(
+            HTTP_AUTHORIZATION=f"Bearer {access}"
+        )
+
+        url = MEMBERSHIP_DETAIL_URL.format(
+            workspace.id,
+            membership.id,
+        )
+
+        response = client.delete(url)
+
+        assert response.status_code == 200
+
+        assert response.data["message"] == (
+            f"{membership.user.email} "
+            "successfully removed from the workspace."
+        )
+
+        assert response.data["workspace"] == membership.workspace.id
+
+        assert not Membership.objects.filter(
+            id=membership.id
+        ).exists()
