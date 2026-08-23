@@ -7,23 +7,6 @@ from apps.workspaces.models import Membership, Role, Workspace
 
 
 @pytest.fixture
-def api_client():
-    return APIClient()
-
-
-@pytest.fixture
-def another_user(db):
-    User = get_user_model()
-
-    return User.objects.create_user(
-        email="another@gmail.com",
-        full_name="Another User",
-        password="StrongPassword123",
-        is_verified=True,
-    )
-
-
-@pytest.fixture
 def admin_user(db):
     User = get_user_model()
 
