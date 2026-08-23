@@ -19,16 +19,20 @@ class WorkflowService:
         has_workspace_role(
             user=user, workspace=workspace, allowed_roles=[Role.ADMIN, Role.MANAGER]
         )
-        if name in Workflow.objects.filter(name=name):
-            return ValueError({"This workflow has already been created."})
-        if name in Workflow.objects.filter(name=name):
-            return ValidationError({"This workflow has already been created."})
+        if Workflow.objects.filter(
+            workspace=workspace,
+            name=name,
+        ).exists():
+            raise ValidationError(
+                {"detail": "This workflow already exists."}
+            )
 
         return Workflow.objects.create(
             workspace=workspace,
             name=name,
         )
 
+    @staticmethod
     def update(*, user, workspace_id, workflow_id, name):
         workflow = get_object_or_404(Workflow, workspace=workspace_id, id=workflow_id)
         workspace = get_object_or_404(
@@ -51,6 +55,7 @@ class WorkflowService:
         workflow.save(update_fields=["name"])
         return workflow
 
+    @staticmethod
     def destroy(*, user, workspace_id, workflow_id):
         workflow = get_object_or_404(Workflow, workspace=workspace_id, id=workflow_id)
         workspace = get_object_or_404(
@@ -58,7 +63,7 @@ class WorkflowService:
             id=workspace_id,
         )
         has_workspace_role(user=user, workspace=workspace, allowed_roles=[Role.ADMIN])
-        if Project.objects.filter(workflow=workflow_id).exists():
+        if Project.objects.filter(workflow=workflow).exists():
             raise ValidationError(
                 {"detail": "This workflow is project-dependent and cannot be deleted."}
             )
@@ -67,11 +72,9 @@ class WorkflowService:
 
 
 class ProjectService:
+
+    @staticmethod
     def create(*, user, workspace_id, workflow_id, data):
-        name = data["name"]
-        description = data["description"]
-        start_date = data.get("start_date")
-        end_date = data.get("end_date")
         workspace = get_object_or_404(Workspace, id=workspace_id)
         workflow = get_object_or_404(Workflow, workspace=workspace_id, id=workflow_id)
         has_workspace_role(
@@ -83,6 +86,7 @@ class ProjectService:
             **data
         )
 
+    @staticmethod
     def update(*, user, workspace_id, project_id, data):
         workspace = get_object_or_404(Workspace, id=workspace_id)
         project = get_object_or_404(
@@ -101,6 +105,7 @@ class ProjectService:
 
 
 class WorkflowStatusService:
+    
     @staticmethod
     def create(*, user, workflow_id, data):
         status_id = data["status_id"]
@@ -122,6 +127,7 @@ class WorkflowStatusService:
             order=order,
         )
 
+    @staticmethod
     def update(*, user, workflow_status_id, order):
         workflow_status = get_object_or_404(
             WorkflowStatus,
@@ -151,6 +157,7 @@ class WorkflowStatusService:
         workflow_status.save(update_fields=["order"])
         return workflow_status
 
+    @staticmethod
     def destroy(*, user, workflow_status_id):
         workflow_status = get_object_or_404(
             WorkflowStatus,
@@ -191,6 +198,7 @@ class SprintService:
             **data
         )
 
+    @staticmethod
     def update(*, user, workspace_id, project_id, sprint_id, data):
         project = get_object_or_404(
             Project,
@@ -207,11 +215,25 @@ class SprintService:
             workspace=project.workspace,
             allowed_roles=[Role.ADMIN, Role.MANAGER],
         )
+        if (
+            "name" in data
+            and Sprint.objects.filter(
+                project=project,
+                name=data["name"],
+            )
+            .exclude(id=sprint.id)
+            .exists()
+        ):
+            raise ValidationError(
+                {"name": "A sprint with this name already exists in this project."}
+            )
         for field, value in data.items():
             setattr(sprint, field, value)
+            
         sprint.save(update_fields=data.keys())
         return sprint
 
+    @staticmethod
     def destroy(*, user, workspace_id, project_id, sprint_id):
         sprint = get_object_or_404(
             Sprint,

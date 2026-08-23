@@ -17,7 +17,7 @@ class WorkflowListSerializer(serializers.ModelSerializer):
 
 
 class WorkflowCreateSerializer(serializers.ModelSerializer):
-    name = serializers.CharField(max_length=255)
+    name = serializers.CharField(max_length=100)
 
     class Meta:
         model = Workflow
@@ -117,6 +117,17 @@ class SprintCreateSerializer(serializers.ModelSerializer):
         required=False,
         allow_blank=True
     )
+    
+    def validate(self, attrs):
+        start_date = attrs.get("start_date")
+        end_date = attrs.get("end_date")
+
+        if start_date and end_date and end_date < start_date:
+            raise serializers.ValidationError({
+                "end_date": "End date must be after start date."
+            })
+
+        return attrs
 
     class Meta:
         model = Sprint
@@ -138,6 +149,17 @@ class SprintUpdateSerializer(serializers.ModelSerializer):
         required=False,
         allow_blank=True
     )
+
+    def validate(self, attrs):
+        start_date = attrs.get("start_date", self.instance.start_date)
+        end_date = attrs.get("end_date", self.instance.end_date)
+
+        if start_date and end_date and end_date < start_date:
+            raise serializers.ValidationError({
+                "end_date": "End date must be after start date."
+            })
+
+        return attrs
 
     class Meta:
         model = Sprint

@@ -73,6 +73,15 @@ def workspace_manager(db, another_user, workspace):
 
 
 @pytest.fixture
+def workspace_viewer(db, another_user, workspace):
+    return Membership.objects.create(
+        user=another_user,
+        workspace=workspace,
+        role=Role.VIEWER,
+    )
+
+
+@pytest.fixture
 def status_obj(db):
     return Status.objects.create(name="To Do")
 
@@ -94,9 +103,15 @@ def workflow(db, workspace):
 def workflow_another(db, another_workspace):
     return Workflow.objects.create(
         workspace=another_workspace,
-        name="	Software Development",
+        name="Software Development",
     )
 
+@pytest.fixture
+def workflow_same_workspace(db, workspace):
+    return Workflow.objects.create(
+        workspace=workspace,
+        name="Software Development",
+    )
 
 @pytest.fixture
 def authenticated_client(api_client, user):
@@ -146,8 +161,28 @@ def workflow_status_another(db, workflow_another, status_obj):
 def sprint(db, project):
     return Sprint.objects.create(
         project=project,
-        name="sprint 1",
+        name="Sprint 1",
         start_date="2026-08-19",
         end_date="2026-09-19",
         goal="Complete authentication and project management features."
     )
+
+@pytest.fixture
+def sprint_another(db, project):
+    return Sprint.objects.create(
+        project=project,
+        name="Sprint 2",
+    )
+
+
+@pytest.fixture
+def membership_factory(db, another_user, workspace):
+
+    def create_membership(role):
+        return Membership.objects.create(
+            user=another_user,
+            workspace=workspace,
+            role=role,
+        )
+
+    return create_membership

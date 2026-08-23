@@ -121,13 +121,7 @@ class WorkflowViewSet(viewsets.GenericViewSet):
             workflow_id=workflow_id,
         )
 
-        return Response(
-            {
-                "message": f"{request.user}successfully removed from the workflow.",
-                "workflow": workflow_id,
-            },
-            status=status.HTTP_200_OK,
-        )
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 class ProjectViewSet(viewsets.GenericViewSet):
@@ -351,7 +345,13 @@ class SprintViewSet(viewsets.GenericViewSet):
         return Response({"data": serializer.data}, status=status.HTTP_200_OK)
 
     def update(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data, partial=True)
+        sprint = get_object_or_404(
+            Sprint,
+            id=kwargs["sprint_id"],
+            project=kwargs["project_id"],
+            project__workspace_id=kwargs["workspace_id"],
+        )
+        serializer = self.get_serializer(sprint, data=request.data, partial=True)
         serializer.is_valid(raise_exception=True)
         sprint = SprintService.update(
             user=request.user,
