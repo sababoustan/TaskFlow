@@ -1,5 +1,5 @@
 from rest_framework.exceptions import PermissionDenied
-
+from rest_framework import permissions
 from apps.workspaces.models import Membership
 
 
@@ -22,3 +22,9 @@ def has_workspace_role(*, workspace, user, allowed_roles):
         raise PermissionDenied("You do not have permission to perform this action.")
 
     return True
+
+
+class IsWorkspaceOwner(permissions.BasePermission):
+
+    def has_object_permission(self, request, view, obj):
+        return obj.owner == request.user
