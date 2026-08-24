@@ -1,4 +1,4 @@
-from django.core.exceptions import ValidationError
+from rest_framework.exceptions import ValidationError
 from django.shortcuts import get_object_or_404
 
 from apps.users.models import User

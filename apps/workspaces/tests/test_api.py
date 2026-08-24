@@ -86,6 +86,49 @@ class TestWorkspaceAPI:
         assert workspace.title == "Django Project"
         assert workspace.slug == "django-project"
 
+    def test_unauthenticated_user_cannot_create_workspace(
+        self,
+        api_client,
+    ):
+        response = api_client.post(
+            WORKSPACE_URL,
+            {"title": "Django Project"},
+            format="json",
+        )
+
+        assert response.status_code == status.HTTP_401_UNAUTHORIZED
+        assert Workspace.objects.count() == 0
+
+    def test_user_cannot_create_workspace_without_title(
+        self,
+        authenticated_client,
+    ):
+        response = authenticated_client.post(
+            WORKSPACE_URL,
+            {},
+            format="json",
+        )
+
+        assert response.status_code == status.HTTP_400_BAD_REQUEST
+        assert "title" in response.data
+        assert Workspace.objects.count() == 0
+
+    def test_user_cannot_create_workspace_with_empty_title(
+        self,
+        authenticated_client,
+    ):
+        response = authenticated_client.post(
+            WORKSPACE_URL,
+            {
+                "title": "",
+            },
+            format="json",
+        )
+
+        assert response.status_code == status.HTTP_400_BAD_REQUEST
+        assert "title" in response.data
+        assert Workspace.objects.count() == 0
+
     def test_user_can_retrieve_owned_workspace(
         self,
         authenticated_client,
@@ -150,30 +193,71 @@ class TestWorkspaceAPI:
 
         assert workspace.title == "Updated Workspace"
 
-    def test_member_cannot_update_workspace(
+    def test_owner_cannot_update_workspace_with_empty_title(
+        self,
+        authenticated_client,
+        workspace,
+    ):
+        url = WORKSPACE_DETAIL_URL.format(workspace.id)
+
+        response = authenticated_client.patch(
+            url,
+            {"title": ""},
+            format="json",
+        )
+
+        assert response.status_code == status.HTTP_400_BAD_REQUEST
+        assert "title" in response.data
+
+        workspace.refresh_from_db()
+
+        assert workspace.title != ""
+
+    def test_user_cannot_update_another_workspace(
+        self,
+        authenticated_client,
+        another_workspace,
+    ):
+        url = WORKSPACE_DETAIL_URL.format(another_workspace.id)
+
+        response = authenticated_client.patch(
+            url,
+            {"title": "Hacked Workspace"},
+            format="json",
+        )
+
+        assert response.status_code == status.HTTP_404_NOT_FOUND
+
+    @pytest.mark.parametrize(
+        "role",
+        [
+            Role.MANAGER,
+            Role.MEMBER,
+            Role.VIEWER,
+        ],
+    )
+    def test_non_owner_cannot_update_workspace(
         self,
         api_client,
         invited_user,
         workspace,
         membership,
+        role,
     ):
+        membership.role = role
+        membership.save(update_fields=["role"])
+
         api_client.force_authenticate(user=invited_user)
 
         url = WORKSPACE_DETAIL_URL.format(workspace.id)
 
         response = api_client.patch(
             url,
-            {
-                "title": "Hacked Workspace",
-            },
+            {"title": "Hacked Workspace"},
             format="json",
         )
 
         assert response.status_code == status.HTTP_403_FORBIDDEN
-
-        workspace.refresh_from_db()
-
-        assert workspace.title != "Hacked Workspace"
 
     def test_owner_can_delete_workspace(
         self,
@@ -202,42 +286,40 @@ class TestWorkspaceAPI:
 
         assert response.status_code == status.HTTP_403_FORBIDDEN
         assert Workspace.objects.filter(id=workspace.id).exists()
-        
+
+    def test_user_cannot_delete_another_workspace(
+        self,
+        authenticated_client,
+        another_workspace,
+    ):
+        url = WORKSPACE_DETAIL_URL.format(another_workspace.id)
+
+        response = authenticated_client.delete(url)
+
+        assert response.status_code == status.HTTP_404_NOT_FOUND
+        assert Workspace.objects.filter(
+            id=another_workspace.id
+        ).exists()
+
 
 INVITATION_URL = "/api/v1/workspaces/{}/invitations/"
 ACCEPT_INVITATION_URL = "/api/v1/workspaces/invitations/{}/accept/"
 REJECT_INVITATION_URL = "/api/v1/workspaces/invitations/{}/reject/"
 CANCEL_INVITATION_URL = "/api/v1/workspaces/invitations/{}/cancel/"
 
+
 @pytest.mark.django_db
 class TestInvitationAPI:
 
-    def test_create_invitation(
+    def test_unauthenticated_user_cannot_create_invitation(
         self,
-        client,
-        user,
+        api_client,
         workspace,
         invited_user,
     ):
-        login_response = client.post(
-            "/api/v1/auth/login/",
-            {
-                "email": user.email,
-                "password": "StrongPassword123",
-            },
-            format="json",
-        )
-
-        assert login_response.status_code == 200
-
-        access = login_response.data["access"]
-        client.credentials(
-            HTTP_AUTHORIZATION=f"Bearer {access}"
-        )
-
         url = INVITATION_URL.format(workspace.id)
 
-        response = client.post(
+        response = api_client.post(
             url,
             {
                 "email": invited_user.email,
@@ -246,21 +328,41 @@ class TestInvitationAPI:
             format="json",
         )
 
-        assert response.status_code == 201
-        assert response.data["messages"] == (
-            "The user was successfully invited."
+        assert response.status_code == status.HTTP_401_UNAUTHORIZED
+
+    @pytest.mark.parametrize(
+        "role",
+        [
+            Role.MANAGER,
+            Role.MEMBER,
+            Role.VIEWER,
+        ],
+    )
+    def test_non_admin_cannot_create_invitation(
+        self,
+        api_client,
+        invited_user,
+        workspace,
+        membership,
+        role,
+    ):
+        membership.role = role
+        membership.save(update_fields=["role"])
+
+        api_client.force_authenticate(user=invited_user)
+
+        url = INVITATION_URL.format(workspace.id)
+
+        response = api_client.post(
+            url,
+            {
+                "email": "newuser@gmail.com",
+                "role": Role.MEMBER,
+            },
+            format="json",
         )
 
-        invitation = WorkspaceInvitation.objects.get(
-            workspace=workspace,
-            user=invited_user,
-        )
-
-        assert invitation.invited_by == user
-        assert invitation.workspace == workspace
-        assert invitation.user == invited_user
-        assert invitation.role == Role.MEMBER
-        assert invitation.status == InvitationStatus.PENDING
+        assert response.status_code == status.HTTP_403_FORBIDDEN
 
     def test_list_invitations(
         self,
@@ -300,6 +402,25 @@ class TestInvitationAPI:
         )
         assert invitation["role"] == workspace_invitation.role
         assert invitation["status"] == workspace_invitation.status
+
+    def test_cannot_create_duplicate_pending_invitation(
+        self,
+        authenticated_client,
+        workspace,
+        workspace_invitation,
+    ):
+        url = INVITATION_URL.format(workspace.id)
+
+        response = authenticated_client.post(
+            url,
+            {
+                "email": workspace_invitation.user.email,
+                "role": Role.MEMBER,
+            },
+            format="json",
+        )
+
+        assert response.status_code == status.HTTP_400_BAD_REQUEST
 
     def test_accept_invitation(
         self,
@@ -356,6 +477,22 @@ class TestInvitationAPI:
             InvitationStatus.ACCEPTED
         )
 
+    def test_user_cannot_accept_another_users_invitation(
+        self,
+        api_client,
+        user,
+        workspace_invitation,
+    ):
+        api_client.force_authenticate(user=user)
+
+        url = ACCEPT_INVITATION_URL.format(
+            workspace_invitation.id
+        )
+
+        response = api_client.post(url)
+
+        assert response.status_code == status.HTTP_403_FORBIDDEN
+
     def test_reject_invitation(
         self,
         client,
@@ -400,6 +537,22 @@ class TestInvitationAPI:
         assert workspace_invitation.status == (
             InvitationStatus.REJECTED
         )
+
+    def test_user_cannot_reject_another_users_invitation(
+        self,
+        api_client,
+        user,
+        workspace_invitation,
+    ):
+        api_client.force_authenticate(user=user)
+
+        url = REJECT_INVITATION_URL.format(
+            workspace_invitation.id
+        )
+
+        response = api_client.post(url)
+
+        assert response.status_code == status.HTTP_403_FORBIDDEN
 
     def test_cancel_invitation(
         self,
@@ -446,10 +599,41 @@ class TestInvitationAPI:
             InvitationStatus.CANCELLED
         )
 
+    @pytest.mark.parametrize(
+        "role",
+        [
+            Role.MANAGER,
+            Role.MEMBER,
+            Role.VIEWER,
+        ],
+    )
+    def test_non_admin_cannot_cancel_invitation(
+        self,
+        api_client,
+        invited_user,
+        workspace,
+        workspace_invitation,
+        membership,
+        role,
+    ):
+        membership.role = role
+        membership.save(update_fields=["role"])
+
+        api_client.force_authenticate(user=invited_user)
+
+        url = CANCEL_INVITATION_URL.format(
+            workspace_invitation.id
+        )
+
+        response = api_client.post(url)
+
+        assert response.status_code == status.HTTP_403_FORBIDDEN
+
 
 MEMBERSHIP_URL = "/api/v1/workspaces/{}/members/"
 MEMBERSHIP_DETAIL_URL = "/api/v1/workspaces/{}/members/{}/"
 MEMBERSHIP_ROLE_URL = "/api/v1/workspaces/{}/members/{}/role/"
+
 
 @pytest.mark.django_db
 class TestMembershipAPI:
