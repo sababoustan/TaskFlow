@@ -97,19 +97,38 @@ Workspace owner automatically has full access.
 
 ### Testing
 
-The project includes automated tests for:
+## Testing
 
-- Models
-- Authentication APIs
+The project includes a comprehensive automated API test suite covering:
+
+- Authentication and authorization
+- User APIs
 - Workspace APIs
+- Membership APIs
 - Invitation APIs
-- Membership creation
+- Project APIs
+- Workflow APIs
+- Status APIs
+- Sprint APIs
+- Positive and negative test cases
+- Role-based access control
+- API validation
+- Database state verification
 
 Implemented using:
 
 - pytest
 - pytest-django
-- DRF APIClient
+- Django REST Framework APIClient
+- Fixtures
+- Parametrization
+- `conftest.py`
+
+### Test Results
+
+✅ 221 tests passed
+
+For detailed testing documentation, see [`docs/testing.md`](docs/testing.md).
 
 ---
 
@@ -223,7 +242,7 @@ OpenAPI Schema
 Clone the repository
 
 ```bash
-git clone https://github.com/sababoustan/Gexy-shop
+git clone https://github.com/sababoustan/TaskFlow
 ```
 
 Create virtual environment
