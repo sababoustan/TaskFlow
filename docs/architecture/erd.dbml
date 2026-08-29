@@ -66,9 +66,22 @@ Table WorkspaceInvitation {
   }
 }
 
+Table Workflow {
+  id int [pk, increment]
+  workspace_id int [not null]
+  name varchar [not null]
+
+  indexes {
+    (workspace_id, name) [unique]
+  }
+}
+
+Ref: Workflow.workspace_id > Workspace.id
+
 Table Project {
   id int [pk, increment]
   workspace_id int [not null]
+  workflow_id int [not null]
   name varchar [not null]
   description varchar
   start_date datetime
@@ -83,6 +96,21 @@ Table Project {
 }
 
 Ref: Project.workspace_id > Workspace.id
+Ref: Project.workflow_id > Workflow.id
+
+Table WorkflowStatus {
+  id int [pk, increment]
+  workflow_id int [not null]
+  status_id int [not null]
+  order int [not null]
+
+  indexes {
+    (workflow_id, order) [unique]
+  }
+}
+
+Ref: WorkflowStatus.workflow_id > Workflow.id
+Ref: WorkflowStatus.status_id > Status.id
 
 Table Sprint {
   id int [pk, increment]
@@ -101,8 +129,7 @@ Ref: Sprint.project_id > Project.id
 
 Table Status {
   id int [pk, increment]
-  title varchar [not null]
-  display_order int
+  name varchar [not null]
 }
 
 Table Priority {
